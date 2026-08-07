@@ -66,7 +66,7 @@
             <input type="text" id="f_locale" placeholder="Jurassic Frontier / Night">
           </label>
           <label class="field wide">Objective
-            <input type="text" id="f_objective" placeholder="Seeking Hyper Narga Scales to upgrade Hidden Scythe.">
+            <input type="text" id="f_objective" placeholder="Were you gathering materials? Clearing quests? Helping a fellow hunter?">
           </label>
           <label class="field">Weapon Type
             <select id="f_weaponType">
@@ -82,7 +82,7 @@
             <datalist id="weaponNames"></datalist>
           </label>
           <label class="field">Armor Used
-            <input type="text" id="f_armor" placeholder="OG Hunter">
+            <input type="text" id="f_armor" placeholder="What set were you using?">
           </label>
           <label class="field">Carts
             <input type="number" id="f_carts" min="0" max="9" step="1" value="0">
@@ -106,7 +106,10 @@
             </select>
           </label>
           <label class="field">Clear Time
-            <input type="text" id="f_time" placeholder="18'42">
+            <!-- No maxlength: the mask already caps the value at 4 digits, and the
+                 attribute blocks keystrokes when a stripped character has transiently
+                 filled the field, dropping digits the mask would have accepted. -->
+            <input type="text" id="f_time" inputmode="numeric" placeholder="00'00">
           </label>
           <label class="field wide">Notes
             <textarea id="f_notes" rows="3" placeholder="Anything else worth remembering…"></textarea>
@@ -227,6 +230,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

@@ -545,7 +545,9 @@
     $("f_carts").value = e.carts != null ? e.carts : 0;
     ["f_p1", "f_p2", "f_p3", "f_p4"].forEach((id, i) => { $(id).value = (e.party || [])[i] || ""; });
     $("f_outcome").value = e.outcome || "";
-    $("f_time").value = e.clearTime || "";
+    // Run stored values through the mask too, so an entry written before it existed
+    // (or imported from the markdown diary as "6'02") shows in the same MM'SS shape.
+    $("f_time").value = formatClearTime(e.clearTime, true);
     $("f_notes").value = e.notes || "";
     syncWeapon();
   }
@@ -664,6 +666,21 @@
       frag.appendChild(o);
     }
     list.appendChild(frag);
+  }
+
+  // Clear Time is a digit mask: everything that isn't a digit is dropped, and the last two
+  // digits are always the seconds, so the apostrophe walks left as you type — 1, 18,
+  // 1'84, 18'42. `pad` is for when editing finishes: it fills the minutes out to two
+  // digits, and reads a bare "6" as six minutes flat rather than six seconds.
+  //
+  // Deliberately no clamping of the seconds. "18'75" is a typo the hunter can see and fix;
+  // silently rewriting it to 19'15 would be this app inventing a clear time.
+  function formatClearTime(value, pad) {
+    const d = String(value || "").replace(/\D/g, "").slice(0, 4);
+    if (!d) return "";
+    if (d.length <= 2) return pad ? d.padStart(2, "0") + "'00" : d;
+    const mm = d.slice(0, -2), ss = d.slice(-2);
+    return (pad ? mm.padStart(2, "0") : mm) + "'" + ss;
   }
 
   function refreshPartyNames() {
@@ -936,6 +953,13 @@
     if (e) confirmAction("Delete this entry?", entryQuestDisplay(e), () => deleteEntry(e.id));
   });
   $("f_weaponType").addEventListener("change", syncWeapon);
+  // Reformat as they type, then pad the minutes once they leave the field.
+  $("f_time").addEventListener("input", function () {
+    this.value = formatClearTime(this.value, false);
+  });
+  $("f_time").addEventListener("blur", function () {
+    this.value = formatClearTime(this.value, true);
+  });
   $("copyAllBtn").addEventListener("click", () => {
     copyText(sortedEntries().map(e => entryToText(e, true)).join("\n\n"), $("copyAllBtn"));
   });
