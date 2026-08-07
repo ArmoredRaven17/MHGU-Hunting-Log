@@ -156,3 +156,14 @@ the reliable source.
 The names only feed the Weapon field's autocomplete. That field stays a plain text input,
 so anything not in the list is still accepted, and it is disabled only while no type is
 picked *and* it is empty — an imported entry with a weapon but no type must stay editable.
+
+## Theme
+
+27 monster-coloured themes, ported from the randomizer's `applyTheme`. Persisted to
+`mhgu-log-theme`; boot falls back to `#1E2025` when the stored hex isn't in `COLORS`, so a
+removed theme can't strand someone in a look with no swatch to match it.
+
+`applyTheme` has a light branch (`bright > 230`) that nothing currently reaches — Gypceros
+(`#FFFFFF`) was the only swatch bright enough and has been removed. **Leave it in place.**
+It is kept deliberately so a light theme can be added back by dropping a bright hex into
+`COLORS`, and is not dead code to clean up.
