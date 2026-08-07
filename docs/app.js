@@ -73,7 +73,7 @@
     ["Duramboros", "#5a411f"], ["Diablos", "#997c54"],
     ["Barroth", "#B57C45"], ["Bulldrome", "#cfaa87"],
     ["K. Daora", "#505358", "Kushala Daora"], ["Valstrax", "#aeb5c1"],
-    ["Forbidden", "#1E2025", "Question Mark"], ["Gypceros", "#FFFFFF"],
+    ["Forbidden", "#1E2025", "Question Mark"],
   ];
   const COLORS_HEX = Object.fromEntries(COLORS.map(([name, hex]) => [hex.toUpperCase(), name]));
   const COLORS_ICON = Object.fromEntries(COLORS.filter(c => c[2]).map(([name, , icon]) => [name, icon]));
@@ -976,8 +976,13 @@
   // ── Boot ─────────────────────────────────────────────────────────────────
   WEAPONS.forEach(w => $("f_weaponType").add(new Option(w, w)));
   buildSwatches();
-  let savedTheme = "#1E2025";
+  // Fall back to the default when the stored hex is no longer in the palette — a theme
+  // that has since been removed would otherwise load with no swatch to match it, leaving
+  // the picker showing nothing as selected.
+  const DEFAULT_THEME = "#1E2025";
+  let savedTheme = DEFAULT_THEME;
   try { savedTheme = localStorage.getItem(THEME_KEY) || savedTheme; } catch (e) {}
+  if (!COLORS_HEX[String(savedTheme).toUpperCase()]) savedTheme = DEFAULT_THEME;
   applyTheme(savedTheme);
 
   buildTree();
