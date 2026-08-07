@@ -76,11 +76,61 @@
   // ── Icon path helpers ────────────────────────────────────────────────────
   const FALLBACK_ICON = "assets/MonsterIcons/MHGU-Question_Mark_Icon.webp";
   const PROWLER_ICON = "assets/ProwlerIcons/FourthGen-Palico_Icon_Blue.webp";
-  const monsterIcon = (name) => name
+  // Which icons actually exist on disk, emitted by tools/build-data.js. Checking against
+  // it means a derived name that has no icon degrades to the question mark deliberately
+  // rather than via a 404 and an error handler.
+  const HAS_ICON = new Set(DATA.icons || []);
+  const monsterIcon = (name) => (name && HAS_ICON.has(name))
     ? "assets/MonsterIcons/MHGU-" + name.replace(/ /g, "_") + "_Icon.webp"
     : FALLBACK_ICON;
   const weaponIcon = (w) => w === "Prowler" ? PROWLER_ICON
     : "assets/WeaponIcons/icon_" + w.toLowerCase().replace(/ & /g, "_and_").replace(/ /g, "_") + "_tinted.png";
+
+  // QuestData.json names no icon — it's derived. Large-monster quests read it off
+  // Monster/Monsters, but the ~195 quests without a monster need the objective text
+  // parsed instead. Both helpers below are ported from the randomizer's app.js.
+
+  // Objectives write the target in plural ("Slay 10 Maccao", "Slay 8 Melynxes"), and some
+  // monsters are singular-with-an-s already (Rhenoplos, Cephalos). Rather than guess the
+  // rule, try each spelling and keep the first that has an icon.
+  const resolveMonster = (name) => {
+    if (!name) return "";
+    for (const c of [name, name.replace(/xes$/, "x"), name.replace(/ies$/, "y"), name.replace(/s$/, "")]) {
+      if (HAS_ICON.has(c)) return c;
+    }
+    return "";
+  };
+  // Parse the target out of a quest objective, e.g. "Slay 10 Maccao" → Maccao.
+  const objectiveMonster = (main) => {
+    if (!main) return "";
+    // "Slay/Defeat/Hunt a total of N MonsterA or/and MonsterB" → first monster
+    let m = main.match(/(?:Slay|Defeat|Hunt) a total of \d+ ([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+    if (m) return resolveMonster(m[1]);
+    // "Slay N Name" — the capital letter excludes "before time expires" etc.
+    m = main.match(/(?:Slay|Defeat|Hunt) \d+ ([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+    if (m) return resolveMonster(m[1]);
+    return "";
+  };
+  // Quest-category icon for gathering/egg quests, keyed off the delivered item.
+  //
+  // The leading verb is stripped first, and that is not cosmetic: "deliver" contains
+  // "liver", so matching the raw objective put every plant-gathering quest ("Deliver 20
+  // Unique Ferns") on the Bone icon. Matching is otherwise plain substring on purpose —
+  // the item names are compounds, and "Goldenfish" and "Balmstone" have to keep hitting
+  // Fish and Ore, which a word-boundary rule would break.
+  function gatheringIcon(main) {
+    const m = (main || "").toLowerCase().replace(/^\s*(?:deliver|slay|hunt|capture|repel|earn|gather|collect)\b/, "");
+    if (m.includes("egg"))                                                                            return "assets/MonsterIcons/MHGU-Egg_Quest_Icon.webp";
+    if (m.includes("mushroom"))                                                                       return "assets/MonsterIcons/MHGU-Mushroom_Quest_Icon.webp";
+    if (m.includes("fish") || m.includes("sashimi") || m.includes("piscine"))                         return "assets/MonsterIcons/MHGU-Fish_Quest_Icon.webp";
+    if (m.includes("moth") || m.includes("cricket") || m.includes("rhino") || m.includes("honey"))    return "assets/MonsterIcons/MHGU-Bug_Quest_Icon.webp";
+    if (m.includes("ore") || m.includes("coal") || m.includes("stone") || m.includes("chunk") ||
+        m.includes("rock"))                                                                           return "assets/MonsterIcons/MHGU-Ore_Quest_Icon.webp";
+    if (m.includes("bone") || m.includes("fossil") || m.includes("amber") || m.includes("shell") ||
+        m.includes("horn") || m.includes("brain") || m.includes("husk") || m.includes("gut")  ||
+        m.includes("tongue") || m.includes("liver") || m.includes("oil") || m.includes("fur"))        return "assets/MonsterIcons/MHGU-Bone_Quest_Icon.webp";
+    return "assets/MonsterIcons/MHGU-Wycademy_Quest_Icon.png";
+  }
 
   // ── Quest helpers ────────────────────────────────────────────────────────
   // Saved entries reference a quest by Type + "//" + Name. tools/build-data.js
@@ -90,6 +140,25 @@
   // "//" separator and pass through untouched.
   const questShortName = (q) => q.Name.replace(/^.*?\/\/\s*/, "");
   const questTargets = (q) => (q.Monsters && q.Monsters.length) ? q.Monsters : (q.Monster ? [q.Monster] : []);
+  // The single icon that represents a quest. Egg/gathering quests get a category icon;
+  // anything else prefers its Monster field (Special Permits already carry the full
+  // deviant name there) and falls back to parsing the objective.
+  //
+  // Note the objective parse is NOT gated on q.SmMonsters: that flag is unset on plenty of
+  // quests that do name a small monster ("Dash It All — Slay 10 Bullfango"), and gating on
+  // it costs ~30 icons for no benefit. If the objective doesn't name a resolvable monster
+  // the parse returns "" anyway.
+  function questIcon(q) {
+    if (!q) return FALLBACK_ICON;
+    if (q.Egg || q.Gathering) return gatheringIcon(q.Main);
+    const target = questTargets(q)[0];
+    if (target && HAS_ICON.has(target)) return monsterIcon(target);
+    const parsed = objectiveMonster(q.Main);
+    if (parsed) return monsterIcon(parsed);
+    // "Earn 500 Wycademy Points" — a real quest category, not a monster hunt.
+    if (/Wycademy Point/i.test(q.Main || "")) return "assets/MonsterIcons/MHGU-Wycademy_Quest_Icon.png";
+    return monsterIcon(target);
+  }
   // "Born of Darkness / Hyper Nargacuga"
   function questDisplay(q) {
     const targets = questTargets(q).map(m => (q.Hyper ? "Hyper " : "") + m);
@@ -330,7 +399,7 @@
           const btn = el("button", "qitem");
           btn.type = "button";
           const icon = el("img", "qitem-icon");
-          icon.src = monsterIcon(questTargets(q)[0]);
+          icon.src = questIcon(q);
           icon.alt = "";
           icon.addEventListener("error", () => { icon.src = FALLBACK_ICON; }, { once: true });
           btn.append(icon, el("span", "qitem-name", questShortName(q)));
@@ -407,9 +476,12 @@
     }
     $("q_name").textContent = questDisplay(q);
     $("q_main").textContent = q.Main || "";
-    icon.src = monsterIcon(questTargets(q)[0]);
+    icon.src = questIcon(q);
     icon.onerror = () => { icon.src = FALLBACK_ICON; icon.onerror = null; };
-    hyper.classList.toggle("hidden", !q.Hyper);
+    // The overlay is a ring drawn around one monster's portrait, so it only reads as a
+    // ring when there is one portrait. Deviants and multi-monster quests skip it, same
+    // as the randomizer does.
+    hyper.classList.toggle("hidden", !q.Hyper || q.Type === "Special Permits" || questTargets(q).length > 1);
     for (const [label, cls] of questPills(q)) pills.appendChild(el("span", "pill " + cls, label));
   }
 
@@ -609,7 +681,7 @@
 
       const top = el("div", "le-top");
       const icon = el("img", "le-icon");
-      icon.src = q ? monsterIcon(questTargets(q)[0]) : FALLBACK_ICON;
+      icon.src = questIcon(q);
       icon.alt = "";
       icon.addEventListener("error", () => { icon.src = FALLBACK_ICON; }, { once: true });
       const mid = el("div");

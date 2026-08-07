@@ -108,3 +108,28 @@ docs/assets/
 Filenames are derived programmatically (spaces → underscores; ` & ` → `_and_` for weapons).
 Every `<img>` built from those helpers gets an `error` handler that swaps in
 `MHGU-Question_Mark_Icon.webp` or hides itself.
+
+### Which icon a quest gets
+
+`QuestData.json` stores no icon — `questIcon()` derives it, in this order:
+
+1. Egg/gathering quests → a category icon from `gatheringIcon()`, keyed off the delivered item.
+2. Otherwise the `Monster` / `Monsters[0]` field (Special Permits already hold the full
+   deviant name, e.g. `Redhelm Arzuros`).
+3. Otherwise the target is parsed out of the objective — `"Slay 10 Maccao"` → `Maccao`.
+4. `"Earn N Wycademy Points"` → the Wycademy icon.
+
+`build-data.js` emits an `icons` array listing what is actually in `assets/MonsterIcons`,
+and `monsterIcon()` checks against it. That is what lets step 3 try several spellings of a
+plural (`Melynxes` → `Melynx`, but `Rhenoplos` stays put) and keep the one that exists,
+instead of depluralising blind. Only 17 of 1292 quests fall back to the question mark, all
+of them Fatalis/Alatreon/Nakarkos quests whose icon files aren't in the asset set.
+
+Two traps, both of which the randomizer's equivalent code still falls into:
+
+- **`gatheringIcon` strips the leading verb before matching.** "deliver" contains "liver",
+  so matching the raw objective puts every plant-gathering quest on the Bone icon.
+- **Matching is otherwise plain substring, deliberately.** A word-boundary rule would stop
+  `Goldenfish` and `Balmstone` hitting Fish and Ore.
+- **The objective parse is not gated on the `SmMonsters` flag**, which is unset on plenty
+  of quests that do name a small monster.
