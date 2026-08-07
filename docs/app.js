@@ -229,12 +229,84 @@
     document.title = "MHGU Hunting Log";
   }
   let autosaveTimer = null;
+  function writeLocalSave() {
+    clearTimeout(autosaveTimer);
+    try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(serializeSave())); } catch (e) {}
+  }
   function scheduleAutosave() {
     clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(() => {
-      try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(serializeSave())); } catch (e) {}
-    }, 500);
+    autosaveTimer = setTimeout(writeLocalSave, 500);
   }
+  // ── Draft: the entry currently in the editor ─────────────────────────────
+  // The logbook autosaves when an entry is committed, but the half-written entry sitting
+  // in the form was only in the DOM — close the tab mid-entry and it was gone. This keeps
+  // a mirror of the editor itself.
+  //
+  // Deliberately its own key and NOT part of serializeSave(): a draft is working state for
+  // this browser, not a record, and shipping it inside a save file would resurrect someone
+  // else's half-finished entry when they open that file.
+  const DRAFT_KEY = "mhgu-log-draft";
+  let draftTimer = null;
+
+  const draftIsEmpty = (d) => !d.questKey && !d.quest && !d.locale && !d.objective &&
+    !d.armor && !d.weapon && !d.weaponType && !d.outcome && !d.clearTime && !d.notes &&
+    !d.carts && !(d.party || []).length;
+
+  function writeDraft() {
+    clearTimeout(draftTimer);
+    const data = readForm();
+    try {
+      if (draftIsEmpty(data)) localStorage.removeItem(DRAFT_KEY);
+      else localStorage.setItem(DRAFT_KEY, JSON.stringify({ editingId, data }));
+    } catch (e) {}
+  }
+  function scheduleDraftSave() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(writeDraft, 400);
+  }
+
+  // Returns true if a draft was restored, so boot knows not to leave the blank form.
+  //
+  // `raw` is passed in at boot rather than read here: resetEditor() writes the draft, and
+  // boot calls it first to build the blank form, which would clear the very draft this is
+  // about to restore. Boot reads the value before any of that runs.
+  function loadDraft(raw) {
+    if (raw === undefined) {
+      try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) { return false; }
+    }
+    if (!raw) return false;
+    let d;
+    try { d = JSON.parse(raw); } catch (e) { return false; }
+    if (!d || !d.data) return false;
+
+    // seq is pinned so normalizeEntry's "assign the next one" path can't advance the
+    // counter that real entries depend on.
+    const data = normalizeEntry(Object.assign({ seq: 0 }, d.data));
+    if (draftIsEmpty(data)) return false;
+
+    selectedQuest = QUESTS_BY_KEY.get(data.questKey) || data.quest || null;
+    localeDefault = selectedQuest ? localeFull(selectedQuest.Locale) : "";
+    renderQuestHead(selectedQuest);
+    const node = questNodes.find(n => n.q === QUESTS_BY_KEY.get(data.questKey));
+    if (node) {
+      node.btn.classList.add("sel");
+      node.sub.classList.add("open");
+      node.grp.classList.add("open");
+    }
+    writeForm(data);
+
+    // Only resume editing an existing entry if it's still there — the log may have been
+    // replaced by a different file since.
+    editingId = (d.editingId && entries.some(e => e.id === d.editingId)) ? d.editingId : null;
+    $("deleteEntryBtn").classList.toggle("hidden", !editingId);
+    $("saveEntryBtn").textContent = editingId ? "Update Entry" : "Save Entry";
+    $("saveEntryBtn").disabled = !selectedQuest;
+    if (editingId) {
+      document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === editingId));
+    }
+    return true;
+  }
+
   function loadAutosave() {
     let raw;
     try { raw = localStorage.getItem(AUTOSAVE_KEY); } catch (e) { return; }
@@ -259,6 +331,10 @@
     seqCounter = entries.reduce((m, e) => Math.max(m, e.seq || 0), 0);
     renderLog();
     refreshPartyNames();
+    // Mirror it immediately, not on the debounce. Opening a file used to leave the log in
+    // memory only: it rendered, looked saved, and the next refresh restored whatever had
+    // been in storage beforehand — so a freshly opened logbook silently vanished.
+    writeLocalSave();
     return true;
   }
   // Anything read back off disk is treated as untrusted shape, not as our own object.
@@ -468,6 +544,7 @@
     if (node) node.btn.classList.add("sel");
     $("saveEntryBtn").disabled = false;
     setView("editor");
+    writeDraft();
   }
 
   function renderQuestHead(q) {
@@ -573,6 +650,7 @@
       $("saveEntryBtn").disabled = true;
     }
     syncWeapon();
+    writeDraft();
   }
 
   function editEntry(entry) {
@@ -597,6 +675,7 @@
     $("saveEntryBtn").disabled = !selectedQuest;
     document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === entry.id));
     setView("editor");
+    writeDraft();
   }
 
   function saveEntry() {
@@ -609,6 +688,7 @@
       renderLog();
       refreshPartyNames();
       document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === editingId));
+      writeDraft();
       toast("Entry updated.");
     } else {
       entries.push(Object.assign({ id: newId(), seq: ++seqCounter }, data));
@@ -959,6 +1039,10 @@
     const e = entries.find(x => x.id === editingId);
     if (e) confirmAction("Delete this entry?", entryQuestDisplay(e), () => deleteEntry(e.id));
   });
+  // Mirror the editor to the draft on every keystroke, so an entry in progress survives
+  // the tab closing. Delegated, so fields added later are covered without extra wiring.
+  $("editorPane").addEventListener("input", scheduleDraftSave);
+  $("editorPane").addEventListener("change", scheduleDraftSave);
   $("f_weaponType").addEventListener("change", syncWeapon);
   // Reformat as they type, then pad the minutes once they leave the field.
   $("f_time").addEventListener("input", function () {
@@ -990,7 +1074,15 @@
   loadAutosave();
   renderLog();
   refreshPartyNames();
+  // Read before resetEditor(), which writes the draft and would clear it.
+  let bootDraft = null;
+  try { bootDraft = localStorage.getItem(DRAFT_KEY); } catch (e) {}
   resetEditor();
+  // After resetEditor, so the restored draft wins over the blank form it just built.
+  if (loadDraft(bootDraft)) {
+    writeDraft();   // put it back, since resetEditor just cleared the stored copy
+    toast("Picked up the entry you were writing.");
+  }
   setView("editor");
 
   // Force a repaint after the MHFU custom font loads to prevent select text clipping.
