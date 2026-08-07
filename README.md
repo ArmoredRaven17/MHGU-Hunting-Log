@@ -49,6 +49,19 @@ node tools/build-data.js
 That writes `docs/data.js` (`window.MHGU_LOG_DATA`). There is no automatic sync, on purpose
 — see [CLAUDE.md](CLAUDE.md).
 
+## Importing a markdown diary
+
+If you already keep the log as a markdown file, `tools/import-diary.js` converts it:
+
+```bash
+OUT=mhgu-hunting-log.json node tools/import-diary.js "path/to/Hunting Diary.md"
+```
+
+Run it without `OUT` first — it prints a report (how many entries it found, how many
+matched a real quest, which titles it couldn't place) without writing anything. Then open
+the resulting `.json` with the 📁 button. See the header of the script for the diary format
+it expects.
+
 ## Deploying
 
 GitHub Pages serves the `docs/` folder on `master`. **Bump the `?v=N` query string** on
