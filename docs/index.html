@@ -9,7 +9,7 @@
      editor's asset set, so it's stored here with the extension that matches its bytes. -->
 <link rel="icon" type="image/webp" href="assets/ItemIcons/MH4G-Ticket_Icon_White.webp?v=1">
 <!-- Bump ?v= on any styles/app/data change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=1">
+<link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
 <div id="app">
@@ -17,10 +17,11 @@
   <header class="titlebar titlebar-header">
     <img class="title-icon" src="assets/MonsterIcons/MHGU-Question_Mark_Icon.webp" alt="">
     <h1>MHGU Hunting Log <span id="dirtyDot" class="dirty-dot hidden" title="Unsaved changes">&#9679;</span></h1>
-    <button id="newBtn" class="icon-btn" title="New Entry" aria-label="New Entry">&#43;</button>
-    <button id="saveBtn" class="icon-btn" title="Save logbook to a file" aria-label="Save">&#128190;</button>
-    <button id="openBtn" class="icon-btn" title="Open a logbook file" aria-label="Open">&#128193;</button>
+    <button id="newBtn" class="btn tiny" title="Start a new entry">New Entry</button>
+    <button id="saveBtn" class="btn tiny" title="Save the logbook to a file">Save</button>
+    <button id="openBtn" class="btn tiny" title="Open a logbook file">Open</button>
     <button id="helpBtn" class="icon-btn" title="Help" aria-label="Help">?</button>
+    <button id="linksBtn" class="icon-btn" title="Other MHGU apps" aria-label="Other MHGU apps">&#128279;</button>
     <button id="aboutBtn" class="icon-btn" title="About / Attributions" aria-label="About">&#9432;</button>
     <button id="themeBtn" class="icon-btn" title="Theme" aria-label="Theme">&#9881;</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
@@ -75,8 +76,10 @@
           <label class="field">Weapon
             <span class="weapon-row">
               <img id="f_weaponIcon" class="weapon-icon hidden" src="" alt="">
-              <input type="text" id="f_weapon" placeholder="Dual Scissors">
+              <input type="text" id="f_weapon" list="weaponNames" autocomplete="off"
+                     placeholder="Pick a weapon type first" disabled>
             </span>
+            <datalist id="weaponNames"></datalist>
           </label>
           <label class="field">Armor Used
             <input type="text" id="f_armor" placeholder="OG Hunter">
@@ -144,11 +147,44 @@
     <h2>Saving</h2>
     <ul>
       <li>The log saves itself in this browser as you type — closing the tab is safe.</li>
-      <li>Use <strong>&#128190;</strong> to write it out to a <code>.json</code> file, and <strong>&#128193;</strong> to load one back.
+      <li><strong>Save</strong> writes it out to a <code>.json</code> file and <strong>Open</strong> loads one back.
           Keep separate files for separate playthroughs.</li>
       <li>Clearing your browser's site data wipes the in-browser copy, so keep a file if the log matters.</li>
     </ul>
     <div class="row end gap"><button id="helpClose" class="btn">Close</button></div>
+  </div>
+</div>
+
+<!-- Other MHGU apps dialog -->
+<div id="linksModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Other MHGU Apps</h2>
+    <p class="muted">Companion fan tools by the same author. Each opens in a new tab.</p>
+    <ul class="app-links">
+      <li class="current">
+        <span class="app-name">Hunting Log <span class="app-here">you are here</span></span>
+        <span class="app-desc">Keeps a running record of your hunts — what you were after, what you wore, who came along.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/MHGU-Quest-Randomizer/" target="_blank" rel="noopener">Quest Randomizer</a>
+        <span class="app-desc">Rolls random quests when you can't decide what to hunt.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mhgu-collection-tracker/" target="_blank" rel="noopener">Collection Tracker</a>
+        <span class="app-desc">Tracks which weapons, armor and Palico gear you own, and what it costs to finish them.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/mhgu-equipment-box/" target="_blank" rel="noopener">Equipment Box</a>
+        <span class="app-desc">Mirrors the in-game box — 2000 hunter slots and 1000 Palico — so you can plan where things sit.</span>
+      </li>
+      <li>
+        <a href="https://armoredraven17.github.io/MHGU-Bingo/" target="_blank" rel="noopener">Bingo</a>
+        <span class="app-desc">Builds a bingo card of hunting goals, with a shareable seed so a group can race the same board.</span>
+      </li>
+    </ul>
+    <div class="row end gap">
+      <button id="linksClose" class="btn">Close</button>
+    </div>
   </div>
 </div>
 
@@ -190,7 +226,7 @@
 
 <div id="toast" class="toast hidden"></div>
 
-<script src="data.js?v=2"></script>
-<script src="app.js?v=6"></script>
+<script src="data.js?v=3"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

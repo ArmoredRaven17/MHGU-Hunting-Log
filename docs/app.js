@@ -15,6 +15,11 @@
     "Hammer", "Hunting Horn", "Lance", "Gunlance", "Switch Axe", "Charge Blade",
     "Insect Glaive", "Light Bowgun", "Heavy Bowgun", "Bow", "Prowler"];
 
+  // Every weapon name in the game, keyed by the type labels above. Generated from the
+  // save editor's data — see tools/build-weapons.js. Used only to fill the Weapon field's
+  // autocomplete, never to validate it.
+  const WEAPON_NAMES = DATA.weapons || {};
+
   // QuestData.json abbreviates locales to fit the randomizer's result card. A logbook
   // line reads better spelled out, and the field stays editable so a time of day can be
   // appended ("Jurassic Frontier / Night").
@@ -188,6 +193,7 @@
   let seqCounter = 0;
   let dirty = false;
   let fileHandle = null;
+  let weaponListFor = null;  // which type's names are currently in the datalist
   let localeDefault = "";    // the locale the current quest prefilled, so a user edit is never clobbered
 
   const newId = () => "le_" + (seqCounter + 1).toString(36) + "_" + Math.random().toString(36).slice(2, 8);
@@ -541,7 +547,7 @@
     $("f_outcome").value = e.outcome || "";
     $("f_time").value = e.clearTime || "";
     $("f_notes").value = e.notes || "";
-    syncWeaponIcon();
+    syncWeapon();
   }
 
   // Fields that carry over to the next entry — you rarely swap armour or party
@@ -564,7 +570,7 @@
       renderQuestHead(null);
       $("saveEntryBtn").disabled = true;
     }
-    syncWeaponIcon();
+    syncWeapon();
   }
 
   function editEntry(entry) {
@@ -623,14 +629,41 @@
     toast("Entry deleted.");
   }
 
-  function syncWeaponIcon() {
+  // The Weapon field follows the type: the type supplies its icon, and it fills the
+  // autocomplete with just that type's weapons (~250-400 names each, 5281 in total —
+  // offering all of them at once would make the list useless).
+  //
+  // It stays a plain text input, so a name that isn't in the list is still accepted.
+  function syncWeapon() {
     const type = $("f_weaponType").value;
+    const input = $("f_weapon");
     const img = $("f_weaponIcon");
+
     img.classList.toggle("hidden", !type);
     if (type) {
       img.src = weaponIcon(type);
       img.onerror = () => { img.classList.add("hidden"); img.onerror = null; };
     }
+
+    // Disabled only while there is nothing to lose: an entry that already carries a
+    // weapon name but no type (imported ones do) has to stay editable.
+    const lock = !type && !input.value.trim();
+    input.disabled = lock;
+    input.placeholder = lock ? "Pick a weapon type first" : "Dual Scissors";
+
+    const names = (WEAPON_NAMES[type] || []);
+    if (names === weaponListFor) return;   // same type as last time — leave the DOM alone
+    weaponListFor = names;
+    const list = $("weaponNames");
+    list.innerHTML = "";
+    if (!names.length) return;
+    const frag = document.createDocumentFragment();
+    for (const n of names) {
+      const o = document.createElement("option");
+      o.value = n;
+      frag.appendChild(o);
+    }
+    list.appendChild(frag);
   }
 
   function refreshPartyNames() {
@@ -876,6 +909,7 @@
     $(modalId).addEventListener("click", (e) => { if (e.target.id === modalId) $(modalId).classList.add("hidden"); });
   };
   modal("helpBtn", "helpModal", "helpClose");
+  modal("linksBtn", "linksModal", "linksClose");
   modal("aboutBtn", "aboutModal", "aboutClose");
   modal("themeBtn", "themeModal", "themeClose");
   $("confirmModal").addEventListener("click", (e) => {
@@ -901,7 +935,7 @@
     const e = entries.find(x => x.id === editingId);
     if (e) confirmAction("Delete this entry?", entryQuestDisplay(e), () => deleteEntry(e.id));
   });
-  $("f_weaponType").addEventListener("change", syncWeaponIcon);
+  $("f_weaponType").addEventListener("change", syncWeapon);
   $("copyAllBtn").addEventListener("click", () => {
     copyText(sortedEntries().map(e => entryToText(e, true)).join("\n\n"), $("copyAllBtn"));
   });

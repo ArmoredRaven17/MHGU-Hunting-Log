@@ -130,22 +130,25 @@ body{
 .qitem-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── Quest header on the editor ────────────────────────────────────────── */
+/* banner-background-plain.png is banner-background.png with its first 24px removed —
+   that strip holds a dark decorative clasp which, tiled at the left edge of a full-width
+   header, reads as a smudge rather than as trim. */
 .quest-head{
   display:flex;align-items:center;gap:12px;padding:10px 14px;position:relative;
   border:1px solid var(--line);border-radius:8px;
   background-image:
     linear-gradient(color-mix(in srgb,var(--bg2) 80%,transparent),color-mix(in srgb,var(--bg2) 80%,transparent)),
-    url('assets/banner-background.png');
+    url('assets/banner-background-plain.png');
   background-size:auto 100%;
   background-position:left center;
   background-repeat:repeat;
 }
 .qh-icon{width:52px;height:52px;object-fit:contain;flex-shrink:0}
 .qh-hyper{position:absolute;left:11px;top:calc(50% - 29px);width:58px;pointer-events:none}
-.qh-text{min-width:0;flex:1}
+.qh-text{min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}
 .qh-name{font-size:17px;font-weight:700;line-height:1.25}
 .qh-main{font-size:12px;opacity:.8;margin-top:3px;line-height:1.3}
-.qh-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.qh-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:5px}
 .pill{
   color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;
   text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;
@@ -240,6 +243,14 @@ fieldset.party legend{padding:0;margin-bottom:4px;font-size:12px;color:var(--tex
 .swatch.sel{border-color:#fff}
 .swatch-icon{position:absolute;top:7%;left:50%;transform:translateX(-50%);width:60%;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
 .swatch span{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.45)}
+
+/* Other MHGU apps modal */
+.app-links{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:10px}
+.app-links li{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#ffffff08}
+.app-links li.current{opacity:.72}
+.app-links a,.app-name{font-weight:600;font-size:14px}
+.app-here{font-weight:400;font-size:11px;opacity:.7;border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin-left:7px}
+.app-desc{display:block;margin-top:3px;font-size:12px;opacity:.8;line-height:1.4}
 
 /* Toast */
 .toast{
