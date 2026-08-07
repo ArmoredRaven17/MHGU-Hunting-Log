@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mhgu-hunting-log",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5579", "--directory", "docs"],
+      "port": 5579
+    }
+  ]
+}

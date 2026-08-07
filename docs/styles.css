@@ -1,0 +1,265 @@
+/* MHFU game font (falls back to sans-serif for glyphs it lacks, e.g. ★ — © ) */
+@font-face{
+  font-family:'MHFU';
+  src:url('fonts/mhfu_font.ttf') format('truetype');
+  font-display:swap;
+}
+/* Theme variables are set at runtime from the chosen color (see app.js). */
+:root{
+  --bg:#3e3e3e; --bg1:#000000; --bg2:#333; --hover:#2f2f2f; --accent:#7a7a7a; --accent-hover:#9a9a9a;
+  --text:#f3f3f3; --text-dim:#ffffff; --line:#ffffff1f; --card:#ffffff0d;
+  --titlebar-overlay:rgba(0,0,0,0.18);
+}
+*{box-sizing:border-box;scrollbar-color:var(--accent) var(--bg2);scrollbar-width:thin}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent-hover)}
+input,select,button,textarea{font-family:inherit}
+html,body{margin:0;height:100%;overflow:hidden}
+body{
+  font-family:'MHFU',"Segoe UI",system-ui,sans-serif;
+  background:var(--bg); color:var(--text); font-size:14px;
+  user-select:none; -webkit-user-select:none;
+}
+#app{display:flex;flex-direction:column;height:100vh}
+.hidden{display:none !important}
+
+/* Title bar */
+.titlebar{display:flex;align-items:center;gap:10px;padding:8px 14px}
+.titlebar-header{
+  background-image:
+    linear-gradient(color-mix(in srgb,var(--accent) 90%,transparent),color-mix(in srgb,var(--accent) 90%,transparent)),
+    url('assets/titlebar-background.png');
+  background-size:auto 100%;
+  background-position:left center;
+  background-repeat:repeat;
+}
+.title-icon{width:32px;height:32px;object-fit:contain}
+.titlebar h1{font-size:15px;font-weight:600;margin:0;flex:1}
+.dirty-dot{color:#f5b400;font-size:13px;vertical-align:middle}
+.icon-btn{
+  background:transparent;border:none;color:var(--text);font-size:18px;
+  cursor:pointer;padding:6px 9px;border-radius:6px;line-height:1;
+}
+.icon-btn:hover{background:#ffffff1a}
+
+/* Layout — quest browser | editor | logbook */
+.layout{display:flex;flex:1;min-height:0}
+.sidebar{
+  width:270px;flex-shrink:0;padding:12px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:8px;
+  background-image:
+    linear-gradient(color-mix(in srgb,var(--accent) 90%,transparent),color-mix(in srgb,var(--accent) 90%,transparent)),
+    url('assets/sidebar-background-texture1.png');
+  background-size:auto 100%;
+  background-position:left center;
+  background-repeat:repeat;
+}
+.editor{flex:1 1 0;min-width:0;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background:var(--bg1)}
+.logbook{
+  width:400px;flex-shrink:0;min-width:0;padding:12px;display:flex;flex-direction:column;gap:8px;
+  border-left:1px solid var(--line);
+  background-image:
+    linear-gradient(color-mix(in srgb,var(--bg1) 60%,transparent),color-mix(in srgb,var(--bg1) 60%,transparent)),
+    url('assets/panel-body-bg.png');
+  background-size:contain 100%;
+  background-position:left center;
+  background-repeat:repeat;
+}
+
+/* Buttons */
+.btn{
+  background:#ffffff14;color:var(--text);border:1px solid var(--line);
+  border-radius:7px;padding:8px 14px;cursor:pointer;font-size:14px;
+}
+.btn:hover{background:#ffffff24}
+.btn.block{width:100%}
+.btn.tiny{padding:3px 10px;font-size:12px}
+.btn.block,.btn.tiny{
+  background-image:
+    linear-gradient(color-mix(in srgb,var(--bg2) 80%,transparent),color-mix(in srgb,var(--bg2) 80%,transparent)),
+    url('assets/banner-background.png');
+  background-position:right;
+}
+.btn.accent{background:var(--bg1);border-color:#000;color:#fff;font-weight:600;background-image:none;text-shadow:-1px 0 rgba(0,0,0,.55),1px 0 rgba(0,0,0,.55),0 -1px rgba(0,0,0,.55),0 1px rgba(0,0,0,.55)}
+.btn.accent:hover{background:var(--bg2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled:hover{background:#ffffff14}
+.btn.accent:disabled:hover{background:var(--bg1)}
+
+.hint{color:var(--text-dim);opacity:.75;font-size:12px;margin:2px 0}
+.row{display:flex;align-items:center}
+.row.gap{gap:8px}.row.end{justify-content:flex-end}
+
+/* Narrow-screen Entry/Logbook switcher — hidden on wide screens */
+.view-tabs{display:none;gap:6px;padding:8px 12px 0}
+.tab{
+  flex:1;background:#ffffff14;color:var(--text);border:1px solid var(--line);
+  border-radius:7px;padding:6px 10px;cursor:pointer;font-size:13px;font-family:inherit;
+}
+.tab.sel{background:var(--bg2);border-color:var(--accent-hover)}
+
+/* ── Quest browser ─────────────────────────────────────────────────────── */
+.search{
+  width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line);
+  border-radius:7px;padding:7px 10px;font-size:13px;
+}
+.search::placeholder{color:var(--text-dim);opacity:.5}
+.qtree{flex:1;min-height:0;overflow-y:auto;padding-right:4px}
+.qgrp>.qhead{
+  display:flex;align-items:center;gap:4px;cursor:pointer;
+  padding:4px 2px;font-weight:600;line-height:1.3;
+}
+.qgrp>.qhead:hover{color:var(--accent-hover)}
+.qtwist{width:16px;flex-shrink:0;text-align:center;color:var(--accent);font-size:15px;font-weight:700}
+.qcount{margin-left:auto;font-size:11px;opacity:.6;font-weight:400}
+.qgrp>.qkids{display:none;flex-direction:column;margin-left:16px}
+.qgrp.open>.qkids{display:flex}
+.qsub{margin-top:2px}
+.qsub>.qhead{font-weight:400;font-size:13px}
+.qitem{
+  text-align:left;background:transparent;border:none;color:var(--text);
+  font-family:inherit;font-size:12.5px;line-height:1.35;
+  padding:3px 6px;border-radius:5px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+}
+.qitem:hover{background:#ffffff1a;color:var(--accent-hover)}
+.qitem.sel{background:var(--accent);color:#fff}
+.qitem-icon{width:18px;height:18px;object-fit:contain;flex-shrink:0}
+.qitem-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── Quest header on the editor ────────────────────────────────────────── */
+.quest-head{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;position:relative;
+  border:1px solid var(--line);border-radius:8px;
+  background-image:
+    linear-gradient(color-mix(in srgb,var(--bg2) 80%,transparent),color-mix(in srgb,var(--bg2) 80%,transparent)),
+    url('assets/banner-background.png');
+  background-size:auto 100%;
+  background-position:left center;
+  background-repeat:repeat;
+}
+.qh-icon{width:52px;height:52px;object-fit:contain;flex-shrink:0}
+.qh-hyper{position:absolute;left:11px;top:calc(50% - 29px);width:58px;pointer-events:none}
+.qh-text{min-width:0;flex:1}
+.qh-name{font-size:17px;font-weight:700;line-height:1.25}
+.qh-main{font-size:12px;opacity:.8;margin-top:3px;line-height:1.3}
+.qh-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.pill{
+  color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;
+  text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;
+  text-shadow:0 1px 1px rgba(0,0,0,.35);
+}
+.pill-key{background:#FF7200}
+.pill-hunt{background:#e52222}
+.pill-sm{background:#1a7eff}
+.pill-egg{background:#c4a07a}
+.pill-gathering{background:#22cc44}
+.pill-sp{background:#c800ff}
+.pill-hyper{background:#f5b400}
+.pill-event{background:#6a1fa8}
+.pill-arena{background:#1a5fa8}
+.pill-prowler{background:#7a4a1e}
+.pill-capture{background:#4a4a4a}
+
+/* ── Entry form ────────────────────────────────────────────────────────── */
+.editor-body{display:flex;flex-direction:column;gap:12px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-dim);min-width:0}
+.field.wide{grid-column:1 / -1}
+.field input,.field select,.field textarea{
+  background:var(--bg2);color:var(--text);border:1px solid var(--line);
+  border-radius:7px;padding:7px 9px;font-size:13px;width:100%;min-width:0;
+  user-select:text;-webkit-user-select:text;
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--text-dim);opacity:.4}
+.field input:focus,.field select:focus,.field textarea:focus{outline:1px solid var(--accent-hover)}
+.field textarea{resize:vertical;line-height:1.4}
+.weapon-row{display:flex;align-items:center;gap:6px}
+.weapon-icon{width:22px;height:22px;object-fit:contain;flex-shrink:0}
+fieldset.party{border:none;margin:0;padding:0}
+fieldset.party legend{padding:0;margin-bottom:4px;font-size:12px;color:var(--text-dim)}
+.party-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.editor-actions{display:flex;align-items:center;gap:8px}
+.editor-empty{opacity:.55}
+
+/* ── Logbook ───────────────────────────────────────────────────────────── */
+.lb-head{display:flex;align-items:center;gap:8px}
+.lb-head h2{font-size:15px;margin:0;flex:1}
+.lb-count{
+  display:inline-block;min-width:20px;text-align:center;font-size:11px;font-weight:400;
+  background:#ffffff1f;border-radius:9px;padding:1px 6px;vertical-align:middle;
+}
+.lb-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px}
+.lb-empty{opacity:.6;font-size:12.5px;line-height:1.5;margin:6px 2px}
+.log-entry{
+  border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#ffffff0f;
+  cursor:pointer;position:relative;
+}
+.log-entry:hover{background:#ffffff1c}
+.log-entry.sel{border-color:var(--accent-hover);background:#ffffff1c}
+.le-top{display:flex;align-items:center;gap:7px}
+.le-icon{width:26px;height:26px;object-fit:contain;flex-shrink:0}
+.le-quest{font-weight:700;font-size:13px;line-height:1.25;min-width:0;flex:1;user-select:text;-webkit-user-select:text}
+.le-date{font-size:10.5px;opacity:.6;white-space:nowrap;margin-top:2px}
+.le-fields{margin:6px 0 0;font-size:12px;line-height:1.5;user-select:text;-webkit-user-select:text}
+.le-fields div{display:flex;gap:6px}
+.le-fields dt{opacity:.6;flex-shrink:0}
+.le-fields dd{margin:0;min-width:0;word-break:break-word}
+.le-notes{white-space:pre-wrap}
+.le-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:7px}
+.le-outcome{font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;color:#fff}
+.le-outcome.Success{background:#22cc44}
+.le-outcome.Fail{background:#e52222}
+.le-outcome.Abandoned{background:#4a4a4a}
+.le-carts{font-size:10.5px;opacity:.7;white-space:nowrap}
+.le-weapon-icon{width:18px;height:18px;object-fit:contain;flex-shrink:0}
+
+/* ── Modals ────────────────────────────────────────────────────────────── */
+.modal{position:fixed;inset:0;background:#000000a8;display:flex;align-items:center;justify-content:center;z-index:10}
+.modal-card{
+  border:1px solid var(--line);border-radius:12px;padding:22px;width:min(460px,90vw);
+  max-height:85vh;overflow-y:auto;
+  background-color:var(--bg2);
+  background-image:
+    linear-gradient(color-mix(in srgb,var(--bg2) 84%,transparent),color-mix(in srgb,var(--bg2) 84%,transparent)),
+    url('assets/rockyTextureDark2.png');
+  background-repeat:repeat;background-size:auto,200px 200px;
+}
+.modal-card h2{margin:0 0 16px;font-size:18px}
+.modal-card p{margin:0 0 10px;line-height:1.45}
+.modal-card a{color:var(--accent-hover)}
+.modal-card code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.modal-card .muted{color:var(--text-dim);opacity:.85;font-size:13px}
+.modal-card ul{margin:0 0 10px;padding-left:18px}
+.modal-card li{margin-bottom:5px;line-height:1.4}
+.modal-divider{border:none;border-top:1px solid var(--line);margin:14px 0 10px}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:15px}
+.swatch{aspect-ratio:1;border-radius:8px;border:2px solid transparent;cursor:pointer;position:relative;overflow:hidden}
+.swatch.sel{border-color:#fff}
+.swatch-icon{position:absolute;top:7%;left:50%;transform:translateX(-50%);width:60%;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.swatch span{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.45)}
+
+/* Toast */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:20;
+  background:var(--bg2);border:1px solid var(--line);border-radius:8px;
+  padding:9px 16px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.45);
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+/* Under 1100px there isn't room for editor + logbook side by side, so the tab
+   strip appears and .layout shows one of them at a time. */
+@media (max-width:1100px){
+  .view-tabs{display:flex}
+  .logbook{width:auto;flex:1 1 0;border-left:none}
+  #app[data-view="editor"] .logbook{display:none}
+  #app[data-view="log"] .editor{display:none}
+}
+@media (max-width:760px){
+  .layout{flex-direction:column}
+  .sidebar{width:auto;max-height:34vh;border-bottom:1px solid var(--line)}
+  .form-grid{grid-template-columns:minmax(0,1fr)}
+  .party-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
