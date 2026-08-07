@@ -76,5 +76,11 @@ the Pages CDN caches by full URL, so without a bump nobody sees the update.
 
 ## Credits
 
-Monster, weapon and Palico icons are from the Monster Hunter Wiki. Monster Hunter is a
-trademark of Capcom; this is an unofficial fan tool.
+Monster, weapon, Palico and item icons come from the
+[Monster Hunter Wiki](https://monsterhunter.fandom.com/), whose community content is
+licensed [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/); any adaptations
+here are shared under the same licence. The tab icon is the EX Old Fatalis Ticket, taken
+from the [MHGU save editor](https://github.com/ArmoredRaven17/mhgu-editor)'s item icon set
+(`MH4G-Ticket_Icon_White`, the sprite `item_colored_icons.json` maps that item to).
+
+Monster Hunter is a trademark of Capcom; this is an unofficial fan tool.
