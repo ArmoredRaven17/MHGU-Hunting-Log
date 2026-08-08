@@ -9,7 +9,7 @@
      editor's asset set, so it's stored here with the extension that matches its bytes. -->
 <link rel="icon" type="image/webp" href="assets/ItemIcons/MH4G-Ticket_Icon_White.webp?v=1">
 <!-- Bump ?v= on any styles/app/data change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <div id="app">
@@ -148,7 +148,10 @@
             <option value="carts">Carts</option>
           </select>
         </label>
-        <button id="copyAllBtn" class="btn tiny">Copy All</button>
+        <label class="lb-selectall" title="Select every entry">
+          <input type="checkbox" id="selectAll">All
+        </label>
+        <button id="copySelBtn" class="btn tiny" disabled>Copy Selected</button>
       </header>
       <div id="lbList" class="lb-list"></div>
     </section>
@@ -163,7 +166,8 @@
       <li>Pick a quest on the left — search by quest name or monster, or browse by rank.</li>
       <li>The quest fills in its own locale and objective; everything else is yours to write.</li>
       <li><strong>Save Entry</strong> adds it to the logbook on the right. Click any entry to edit it again.</li>
-      <li>Every entry has a <strong>Copy</strong> button, and <strong>Copy All</strong> copies the whole log.</li>
+      <li>Tick entries and press <strong>Copy Selected</strong> to put them on the clipboard — handy for
+          pasting a session into Discord. <strong>All</strong> ticks the whole log.</li>
     </ul>
     <hr class="modal-divider">
     <h2>Saving</h2>
@@ -250,6 +254,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>

@@ -906,12 +906,32 @@
   try { groupBy = localStorage.getItem(GROUP_KEY) || "none"; } catch (e) {}
   if (!GROUPINGS[groupBy]) groupBy = "none";
 
+  // ── Selection ────────────────────────────────────────────────────────────
+  // Which entries are ticked for copying. Held in memory rather than storage: it's an
+  // action in progress, not a property of the log. It does survive a re-render, so
+  // changing the sort or grouping mid-selection doesn't throw the ticks away.
+  const selected = new Set();
+
+  function updateSelectionUI() {
+    const n = selected.size;
+    const all = entries.length;
+    $("copySelBtn").textContent = n ? `Copy Selected (${n})` : "Copy Selected";
+    $("copySelBtn").disabled = n === 0;
+    const box = $("selectAll");
+    box.checked = all > 0 && n === all;
+    box.indeterminate = n > 0 && n < all;
+    box.disabled = all === 0;
+  }
+
   function renderLog() {
     const list = $("lbList");
     list.innerHTML = "";
     $("lbCount").textContent = String(entries.length);
     $("lbCountTab").textContent = String(entries.length);
-    $("copyAllBtn").disabled = entries.length === 0;
+    // Drop ticks for entries that no longer exist — deleted, or replaced by a loaded file.
+    const live = new Set(entries.map(e => e.id));
+    for (const id of [...selected]) if (!live.has(id)) selected.delete(id);
+    updateSelectionUI();
     if (!entries.length) {
       list.appendChild(el("p", "lb-empty", "No hunts logged yet. Pick a quest, fill in the details, and press Save Entry."));
       return;
@@ -958,6 +978,20 @@
       card.dataset.id = e.id;
 
       const top = el("div", "le-top");
+      // Ticking must not open the entry for editing, hence the stopPropagation on the
+      // click as well as the change — the card's own click handler sits above this.
+      const pick = el("input", "le-pick");
+      pick.type = "checkbox";
+      pick.checked = selected.has(e.id);
+      pick.title = "Select for copying";
+      pick.setAttribute("aria-label", "Select entry " + (e.seq || 0) + " for copying");
+      pick.addEventListener("click", (ev) => ev.stopPropagation());
+      pick.addEventListener("change", function (ev) {
+        ev.stopPropagation();
+        if (this.checked) selected.add(e.id); else selected.delete(e.id);
+        card.classList.toggle("picked", this.checked);
+        updateSelectionUI();
+      });
       const icon = el("img", "le-icon");
       icon.src = questIcon(q);
       icon.alt = "";
@@ -968,8 +1002,9 @@
       const meta = ["#" + (e.seq || 0), formatDate(e.date), "Carts: " + (e.carts || 0)]
         .filter(Boolean).join(" · ");
       mid.append(el("div", "le-date", meta));
-      top.append(icon, mid);
+      top.append(pick, icon, mid);
       if (e.outcome) top.append(el("span", "le-outcome " + e.outcome, e.outcome));
+      card.classList.toggle("picked", pick.checked);
       card.appendChild(top);
 
       const dl = el("dl", "le-fields");
@@ -994,19 +1029,13 @@
       const editBtn = el("button", "btn tiny", "Edit");
       editBtn.type = "button";
       editBtn.addEventListener("click", (ev) => { ev.stopPropagation(); editEntry(e); });
-      const copyBtn = el("button", "btn tiny", "Copy");
-      copyBtn.type = "button";
-      copyBtn.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        copyText(entryToText(e, false), copyBtn);
-      });
       const delBtn = el("button", "btn tiny", "Delete");
       delBtn.type = "button";
       delBtn.addEventListener("click", (ev) => {
         ev.stopPropagation();
         confirmAction("Delete this entry?", entryQuestDisplay(e), () => deleteEntry(e.id));
       });
-      actions.append(editBtn, copyBtn, delBtn);
+      actions.append(editBtn, delBtn);
       card.appendChild(actions);
 
       card.addEventListener("click", () => editEntry(e));
@@ -1193,8 +1222,26 @@
   $("f_time").addEventListener("blur", function () {
     this.value = formatClearTime(this.value, true);
   });
-  $("copyAllBtn").addEventListener("click", () => {
-    copyText(sortedEntries().map(e => entryToText(e, true)).join("\n\n"), $("copyAllBtn"));
+  // Copies in the order shown, so what lands in Discord matches what's on screen.
+  //
+  // One entry comes out as the bare seven-line form, the way the old per-entry Copy did.
+  // Several get a Date line each, because a run of otherwise-similar blocks is unreadable
+  // without something to separate them.
+  $("copySelBtn").addEventListener("click", () => {
+    const picked = sortedEntries().filter(e => selected.has(e.id));
+    if (!picked.length) return;
+    const text = picked.map(e => entryToText(e, picked.length > 1)).join("\n\n");
+    copyText(text, $("copySelBtn"));
+  });
+  $("selectAll").addEventListener("change", function () {
+    selected.clear();
+    if (this.checked) entries.forEach(e => selected.add(e.id));
+    document.querySelectorAll(".log-entry").forEach(n => {
+      const box = n.querySelector(".le-pick");
+      if (box) box.checked = selected.has(n.dataset.id);
+      n.classList.toggle("picked", selected.has(n.dataset.id));
+    });
+    updateSelectionUI();
   });
   $("sortBy").addEventListener("change", function () {
     sortBy = SORTS[this.value] ? this.value : "dateDesc";

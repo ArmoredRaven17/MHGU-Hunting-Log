@@ -218,7 +218,11 @@ fieldset.party legend{padding:0;margin-bottom:4px;font-size:12px;color:var(--tex
 }
 .log-entry:hover{background:#ffffff1c}
 .log-entry.sel{border-color:var(--accent-hover);background:#ffffff1c}
+.lb-selectall{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-dim);opacity:.85;cursor:pointer}
+.lb-selectall input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
 .le-top{display:flex;align-items:center;gap:7px}
+.le-pick{accent-color:var(--accent);width:15px;height:15px;flex-shrink:0;cursor:pointer;margin:0}
+.log-entry.picked{border-color:var(--accent-hover);background:#ffffff1c}
 .le-icon{width:26px;height:26px;object-fit:contain;flex-shrink:0}
 .le-quest{font-weight:700;font-size:13px;line-height:1.25;min-width:0;flex:1;user-select:text;-webkit-user-select:text}
 .le-date{font-size:10.5px;opacity:.6;white-space:nowrap;margin-top:2px}
