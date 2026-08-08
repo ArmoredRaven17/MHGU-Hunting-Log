@@ -801,6 +801,90 @@
     return q ? questDisplay(q) : "(quest no longer in data)";
   }
 
+  // ── Grouping ─────────────────────────────────────────────────────────────
+  // Each mode is: a key to bucket on, a heading for that key, and how to order the
+  // buckets. Entries with no value fall into the "" bucket, which always sorts last.
+  //
+  // Only fields the log reliably holds are offered. Clear Time is the notable omission:
+  // the mask works, but nothing recorded times before it existed, so grouping on it would
+  // put every entry in one nameless pile.
+  const GROUP_KEY = "mhgu-log-group";
+  const dayTitle = (k) => {
+    const d = new Date(k + "T00:00");
+    return isNaN(d) ? k : d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+  };
+  const primaryMonster = (e) => {
+    const q = entryQuest(e);
+    if (!q) return "";
+    return (q.Monsters && q.Monsters.length ? q.Monsters[0] : q.Monster) || "";
+  };
+  const OUTCOME_ORDER = ["Success", "Fail", "Abandoned"];
+  const alpha = (a, b) => a.localeCompare(b);
+
+  const GROUPINGS = {
+    none: { label: "Nothing" },
+    date: {
+      label: "Day",
+      key: (e) => (e.date || "").slice(0, 10),
+      title: (k) => dayTitle(k),
+      order: (a, b) => b.localeCompare(a),          // most recent day first
+    },
+    rank: {
+      label: "Quest rank",
+      // Requires a level that maps to a real rank. An entry the importer couldn't link
+      // carries Type but Level 0, which would otherwise head its own "Village Level 0"
+      // group; it belongs with the rest of the unranked.
+      key: (e) => {
+        const q = entryQuest(e);
+        if (!q || !q.Type) return "";
+        const known = (RANKS[q.Type] || []).some(([lv]) => lv === q.Level);
+        return known ? q.Type + "|" + q.Level : "";
+      },
+      title: (k) => { const [t, lv] = k.split("|"); return t + " " + rankLabel({ Type: t, Level: +lv }); },
+      // Village 1★ through to the G-rank Pub, i.e. the order you played them in.
+      order: (a, b) => {
+        const rank = (k) => {
+          const [t, lv] = k.split("|");
+          const i = TYPE_ORDER.indexOf(t);
+          return (i < 0 ? 99 : i) * 1000 + (+lv || 0);
+        };
+        return rank(a) - rank(b);
+      },
+    },
+    monster: {
+      label: "Monster",
+      key: (e) => primaryMonster(e),
+      title: (k) => k,
+      order: alpha,
+    },
+    quest: {
+      label: "Quest",
+      key: (e) => e.questKey || (e.quest && e.quest.Name) || "",
+      title: (k, rows) => entryQuestDisplay(rows[0]),
+      order: null,                                   // sorted by heading text instead
+    },
+    outcome: {
+      label: "Outcome",
+      key: (e) => e.outcome || "",
+      title: (k) => k,
+      order: (a, b) => OUTCOME_ORDER.indexOf(a) - OUTCOME_ORDER.indexOf(b),
+    },
+    carts: {
+      label: "Carts",
+      key: (e) => String(e.carts || 0),
+      title: (k) => k === "1" ? "1 cart" : k + " carts",
+      order: (a, b) => (+a) - (+b),
+    },
+  };
+  const EMPTY_TITLE = {
+    date: "No date", rank: "Unranked", monster: "No monster",
+    quest: "Unknown quest", outcome: "No outcome",
+  };
+
+  let groupBy = "none";
+  try { groupBy = localStorage.getItem(GROUP_KEY) || "none"; } catch (e) {}
+  if (!GROUPINGS[groupBy]) groupBy = "none";
+
   function renderLog() {
     const list = $("lbList");
     list.innerHTML = "";
@@ -811,7 +895,43 @@
       list.appendChild(el("p", "lb-empty", "No hunts logged yet. Pick a quest, fill in the details, and press Save Entry."));
       return;
     }
-    for (const e of sortedEntries()) {
+
+    const rows = sortedEntries();
+    const g = GROUPINGS[groupBy];
+    if (!g || !g.key) {
+      rows.forEach(e => list.appendChild(entryCard(e)));
+      return;
+    }
+
+    const buckets = new Map();
+    for (const e of rows) {
+      const k = g.key(e);
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k).push(e);
+    }
+    // Resolve headings first so "quest" can order by the name it displays rather than by
+    // its "Hub//Hub 6★ // …" key, which would sort by rank prefix instead of title.
+    const groups = [...buckets.entries()].map(([k, rows2]) => ({
+      key: k,
+      rows: rows2,
+      title: k ? g.title(k, rows2) : (EMPTY_TITLE[groupBy] || "—"),
+    }));
+    groups.sort((a, b) => {
+      if (!a.key !== !b.key) return a.key ? -1 : 1;   // the empty bucket sits at the end
+      if (!a.key) return 0;
+      return g.order ? g.order(a.key, b.key) : alpha(a.title, b.title);
+    });
+
+    for (const grp of groups) {
+      const head = el("div", "lb-group");
+      head.append(el("span", "lb-group-name", grp.title), el("span", "lb-group-count", String(grp.rows.length)));
+      list.appendChild(head);
+      grp.rows.forEach(e => list.appendChild(entryCard(e)));
+    }
+  }
+
+  function entryCard(e) {
+    {
       const q = entryQuest(e);
       const card = el("div", "log-entry");
       card.dataset.id = e.id;
@@ -868,7 +988,7 @@
       card.appendChild(actions);
 
       card.addEventListener("click", () => editEntry(e));
-      list.appendChild(card);
+      return card;
     }
   }
 
@@ -1054,6 +1174,15 @@
   $("copyAllBtn").addEventListener("click", () => {
     copyText(sortedEntries().map(e => entryToText(e, true)).join("\n\n"), $("copyAllBtn"));
   });
+  $("groupBy").addEventListener("change", function () {
+    groupBy = GROUPINGS[this.value] ? this.value : "none";
+    try { localStorage.setItem(GROUP_KEY, groupBy); } catch (e) {}
+    renderLog();
+    // Keep the entry being edited highlighted through the re-render.
+    if (editingId) {
+      document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === editingId));
+    }
+  });
   $("tabEditor").addEventListener("click", () => setView("editor"));
   $("tabLog").addEventListener("click", () => setView("log"));
 
@@ -1069,6 +1198,7 @@
   if (!COLORS_HEX[String(savedTheme).toUpperCase()]) savedTheme = DEFAULT_THEME;
   applyTheme(savedTheme);
 
+  $("groupBy").value = groupBy;
   buildTree();
   filterTree();
   loadAutosave();

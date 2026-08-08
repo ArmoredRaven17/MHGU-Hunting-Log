@@ -9,7 +9,7 @@
      editor's asset set, so it's stored here with the extension that matches its bytes. -->
 <link rel="icon" type="image/webp" href="assets/ItemIcons/MH4G-Ticket_Icon_White.webp?v=1">
 <!-- Bump ?v= on any styles/app/data change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -129,6 +129,17 @@
     <section class="logbook" id="logPane">
       <header class="lb-head">
         <h2>Logbook <span class="lb-count" id="lbCount">0</span></h2>
+        <label class="lb-groupby">Group by
+          <select id="groupBy">
+            <option value="none">Nothing</option>
+            <option value="date">Day</option>
+            <option value="rank">Quest rank</option>
+            <option value="monster">Monster</option>
+            <option value="quest">Quest</option>
+            <option value="outcome">Outcome</option>
+            <option value="carts">Carts</option>
+          </select>
+        </label>
         <button id="copyAllBtn" class="btn tiny">Copy All</button>
       </header>
       <div id="lbList" class="lb-list"></div>
@@ -231,6 +242,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>
