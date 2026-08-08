@@ -783,15 +783,34 @@
   }
 
   // ── Logbook ──────────────────────────────────────────────────────────────
-  // Newest first; blank dates sort to the bottom, ties broken by insertion order.
-  const sortedEntries = () => entries.slice().sort((a, b) => {
+  // `seq` is the entry number: assigned once when an entry is created and never reused,
+  // so it records the order hunts were written down — which is not the order they happened
+  // if you backfill a session. Deleting an entry leaves a gap on purpose; the number
+  // identifies an entry rather than counting its position.
+  //
+  // Blank dates go last in BOTH date directions. They're a "no date recorded" bucket, not
+  // a point on the timeline, so flipping them to the top on oldest-first would be claiming
+  // a chronology the entry doesn't have.
+  const byDate = (dir) => (a, b) => {
     if (a.date !== b.date) {
       if (!a.date) return 1;
       if (!b.date) return -1;
-      return a.date < b.date ? 1 : -1;
+      return a.date < b.date ? dir : -dir;
     }
     return (b.seq || 0) - (a.seq || 0);
-  });
+  };
+  const SORTS = {
+    dateDesc: { asc: false, cmp: byDate(1) },
+    dateAsc:  { asc: true,  cmp: byDate(-1) },
+    seqDesc:  { asc: false, cmp: (a, b) => (b.seq || 0) - (a.seq || 0) },
+    seqAsc:   { asc: true,  cmp: (a, b) => (a.seq || 0) - (b.seq || 0) },
+  };
+  const SORT_KEY = "mhgu-log-sort";
+  let sortBy = "dateDesc";
+  try { sortBy = localStorage.getItem(SORT_KEY) || "dateDesc"; } catch (e) {}
+  if (!SORTS[sortBy]) sortBy = "dateDesc";
+
+  const sortedEntries = () => entries.slice().sort(SORTS[sortBy].cmp);
 
   function entryQuest(e) {
     return QUESTS_BY_KEY.get(e.questKey) || e.quest || null;
@@ -827,7 +846,9 @@
       label: "Day",
       key: (e) => (e.date || "").slice(0, 10),
       title: (k) => dayTitle(k),
-      order: (a, b) => b.localeCompare(a),          // most recent day first
+      // Follows the chosen sort direction, so the days don't run newest-first while the
+      // hunts inside them run oldest-first.
+      order: (a, b) => SORTS[sortBy].asc ? a.localeCompare(b) : b.localeCompare(a),
     },
     rank: {
       label: "Quest rank",
@@ -944,7 +965,8 @@
       const mid = el("div");
       mid.style.cssText = "flex:1;min-width:0";
       mid.append(el("div", "le-quest", entryQuestDisplay(e)));
-      const meta = [formatDate(e.date), "Carts: " + (e.carts || 0)].filter(Boolean).join(" · ");
+      const meta = ["#" + (e.seq || 0), formatDate(e.date), "Carts: " + (e.carts || 0)]
+        .filter(Boolean).join(" · ");
       mid.append(el("div", "le-date", meta));
       top.append(icon, mid);
       if (e.outcome) top.append(el("span", "le-outcome " + e.outcome, e.outcome));
@@ -1174,6 +1196,14 @@
   $("copyAllBtn").addEventListener("click", () => {
     copyText(sortedEntries().map(e => entryToText(e, true)).join("\n\n"), $("copyAllBtn"));
   });
+  $("sortBy").addEventListener("change", function () {
+    sortBy = SORTS[this.value] ? this.value : "dateDesc";
+    try { localStorage.setItem(SORT_KEY, sortBy); } catch (e) {}
+    renderLog();
+    if (editingId) {
+      document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === editingId));
+    }
+  });
   $("groupBy").addEventListener("change", function () {
     groupBy = GROUPINGS[this.value] ? this.value : "none";
     try { localStorage.setItem(GROUP_KEY, groupBy); } catch (e) {}
@@ -1198,6 +1228,7 @@
   if (!COLORS_HEX[String(savedTheme).toUpperCase()]) savedTheme = DEFAULT_THEME;
   applyTheme(savedTheme);
 
+  $("sortBy").value = sortBy;
   $("groupBy").value = groupBy;
   buildTree();
   filterTree();

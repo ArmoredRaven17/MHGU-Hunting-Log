@@ -129,6 +129,14 @@
     <section class="logbook" id="logPane">
       <header class="lb-head">
         <h2>Logbook <span class="lb-count" id="lbCount">0</span></h2>
+        <label class="lb-groupby">Sort
+          <select id="sortBy">
+            <option value="dateDesc">Date — newest</option>
+            <option value="dateAsc">Date — oldest</option>
+            <option value="seqDesc">Entry # — highest</option>
+            <option value="seqAsc">Entry # — lowest</option>
+          </select>
+        </label>
         <label class="lb-groupby">Group by
           <select id="groupBy">
             <option value="none">Nothing</option>
@@ -242,6 +250,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
