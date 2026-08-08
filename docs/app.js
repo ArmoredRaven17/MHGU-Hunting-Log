@@ -911,6 +911,23 @@
   // action in progress, not a property of the log. It does survive a re-render, so
   // changing the sort or grouping mid-selection doesn't throw the ticks away.
   const selected = new Set();
+  // Rendered order and the card for each id, so a shift-click can walk the range between
+  // two ticks. Rebuilt by renderLog, because the order is whatever the sort and grouping
+  // currently produce — a range means "everything between these two on screen".
+  let renderedOrder = [];
+  const cardsById = new Map();
+  // The last box ticked without shift. Shift-clicking extends from here, and the anchor
+  // stays put afterwards so the range can be widened or narrowed by clicking again.
+  let pickAnchor = null;
+
+  function applyPick(id, on) {
+    if (on) selected.add(id); else selected.delete(id);
+    const card = cardsById.get(id);
+    if (!card) return;
+    const box = card.querySelector(".le-pick");
+    if (box) box.checked = on;
+    card.classList.toggle("picked", on);
+  }
 
   function updateSelectionUI() {
     const n = selected.size;
@@ -928,9 +945,12 @@
     list.innerHTML = "";
     $("lbCount").textContent = String(entries.length);
     $("lbCountTab").textContent = String(entries.length);
+    renderedOrder = [];
+    cardsById.clear();
     // Drop ticks for entries that no longer exist — deleted, or replaced by a loaded file.
     const live = new Set(entries.map(e => e.id));
     for (const id of [...selected]) if (!live.has(id)) selected.delete(id);
+    if (pickAnchor && !live.has(pickAnchor)) pickAnchor = null;
     updateSelectionUI();
     if (!entries.length) {
       list.appendChild(el("p", "lb-empty", "No hunts logged yet. Pick a quest, fill in the details, and press Save Entry."));
@@ -976,6 +996,8 @@
       const q = entryQuest(e);
       const card = el("div", "log-entry");
       card.dataset.id = e.id;
+      renderedOrder.push(e.id);
+      cardsById.set(e.id, card);
 
       const top = el("div", "le-top");
       // Ticking must not open the entry for editing, hence the stopPropagation on the
@@ -983,13 +1005,24 @@
       const pick = el("input", "le-pick");
       pick.type = "checkbox";
       pick.checked = selected.has(e.id);
-      pick.title = "Select for copying";
+      pick.title = "Select for copying (shift-click for a range)";
       pick.setAttribute("aria-label", "Select entry " + (e.seq || 0) + " for copying");
-      pick.addEventListener("click", (ev) => ev.stopPropagation());
-      pick.addEventListener("change", function (ev) {
+      // Everything happens on click rather than change: only click carries shiftKey, and
+      // it still fires when the box is toggled from the keyboard, so nothing is lost.
+      pick.addEventListener("click", (ev) => {
         ev.stopPropagation();
-        if (this.checked) selected.add(e.id); else selected.delete(e.id);
-        card.classList.toggle("picked", this.checked);
+        const on = pick.checked;              // the browser has already toggled it
+        applyPick(e.id, on);
+        const from = ev.shiftKey && pickAnchor !== null ? renderedOrder.indexOf(pickAnchor) : -1;
+        const to = renderedOrder.indexOf(e.id);
+        if (from >= 0 && to >= 0) {
+          // Whole range takes the state of the box just clicked, so shift-click un-ticks
+          // a run as readily as it ticks one.
+          const [lo, hi] = from < to ? [from, to] : [to, from];
+          for (let i = lo; i <= hi; i++) applyPick(renderedOrder[i], on);
+        } else {
+          pickAnchor = e.id;                  // plain click sets the anchor
+        }
         updateSelectionUI();
       });
       const icon = el("img", "le-icon");
@@ -1234,13 +1267,9 @@
     copyText(text, $("copySelBtn"));
   });
   $("selectAll").addEventListener("change", function () {
-    selected.clear();
-    if (this.checked) entries.forEach(e => selected.add(e.id));
-    document.querySelectorAll(".log-entry").forEach(n => {
-      const box = n.querySelector(".le-pick");
-      if (box) box.checked = selected.has(n.dataset.id);
-      n.classList.toggle("picked", selected.has(n.dataset.id));
-    });
+    const on = this.checked;
+    entries.forEach(e => applyPick(e.id, on));
+    pickAnchor = null;   // a bulk change leaves no meaningful place to extend a range from
     updateSelectionUI();
   });
   $("sortBy").addEventListener("change", function () {
