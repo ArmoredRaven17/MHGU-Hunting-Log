@@ -9,7 +9,7 @@
      editor's asset set, so it's stored here with the extension that matches its bytes. -->
 <link rel="icon" type="image/webp" href="assets/ItemIcons/MH4G-Ticket_Icon_White.webp?v=1">
 <!-- Bump ?v= on any styles/app/data change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 <div id="app">
@@ -127,6 +127,8 @@
 
     <!-- Logbook -->
     <section class="logbook" id="logPane">
+      <!-- Two deliberate rows: six controls don't fit across a 400px column, and letting
+           them wrap on their own put the selection buttons in arbitrary places. -->
       <header class="lb-head">
         <h2>Logbook <span class="lb-count" id="lbCount">0</span></h2>
         <label class="lb-groupby">Sort
@@ -137,7 +139,7 @@
             <option value="seqAsc">Entry # — lowest</option>
           </select>
         </label>
-        <label class="lb-groupby">Group by
+        <label class="lb-groupby">Group
           <select id="groupBy">
             <option value="none">Nothing</option>
             <option value="date">Day</option>
@@ -148,11 +150,15 @@
             <option value="carts">Carts</option>
           </select>
         </label>
+      </header>
+      <div class="lb-tools">
         <label class="lb-selectall" title="Select every entry">
           <input type="checkbox" id="selectAll">All
         </label>
+        <span style="flex:1"></span>
+        <button id="clearSelBtn" class="btn tiny" disabled title="Unselect every entry">Clear</button>
         <button id="copySelBtn" class="btn tiny" disabled>Copy Selected</button>
-      </header>
+      </div>
       <div id="lbList" class="lb-list"></div>
     </section>
   </main>
@@ -255,6 +261,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=19"></script>
+<script src="app.js?v=21"></script>
 </body>
 </html>

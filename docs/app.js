@@ -934,6 +934,7 @@
     const all = entries.length;
     $("copySelBtn").textContent = n ? `Copy Selected (${n})` : "Copy Selected";
     $("copySelBtn").disabled = n === 0;
+    $("clearSelBtn").disabled = n === 0;
     const box = $("selectAll");
     box.checked = all > 0 && n === all;
     box.indeterminate = n > 0 && n < all;
@@ -1270,6 +1271,14 @@
     const on = this.checked;
     entries.forEach(e => applyPick(e.id, on));
     pickAnchor = null;   // a bulk change leaves no meaningful place to extend a range from
+    updateSelectionUI();
+  });
+  // Worth its own button rather than leaning on the All box: while a partial selection has
+  // that box indeterminate, clicking it selects everything instead of clearing, so wiping
+  // a few ticks otherwise takes two clicks and passes through "all 236 selected".
+  $("clearSelBtn").addEventListener("click", () => {
+    entries.forEach(e => applyPick(e.id, false));
+    pickAnchor = null;
     updateSelectionUI();
   });
   $("sortBy").addEventListener("change", function () {
