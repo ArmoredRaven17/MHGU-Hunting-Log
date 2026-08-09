@@ -144,11 +144,18 @@ body{
 /* banner-background-plain.png is banner-background.png with its first 24px removed —
    that strip holds a dark decorative clasp which, tiled at the left edge of a full-width
    header, reads as a smudge rather than as trim. */
+/* Tinted with --content-bg at 88%, not --bg2 at 80%.
+   The banner texture averages rgb(210,210,210), so the fraction left showing lifts the
+   result hard — that, more than the tint, is why the header was the hottest thing on
+   screen. Stepping the tint down one shade barely moved it (Rajang's title went 1.53:1 to
+   1.71:1); it took --content-bg plus a heavier mix to get real change. Using the same
+   shade as the editor beneath still leaves the header raised, because its texture is pale
+   where the editor's rocky one is rgb(39,39,39). */
 .quest-head{
   display:flex;align-items:center;gap:12px;padding:10px 14px;position:relative;
   border:1px solid var(--line);border-radius:8px;
   background-image:
-    linear-gradient(color-mix(in srgb,var(--bg2) 80%,transparent),color-mix(in srgb,var(--bg2) 80%,transparent)),
+    linear-gradient(color-mix(in srgb,var(--content-bg) 88%,transparent),color-mix(in srgb,var(--content-bg) 88%,transparent)),
     url('assets/banner-background-plain.png');
   background-size:auto 100%;
   background-position:left center;
