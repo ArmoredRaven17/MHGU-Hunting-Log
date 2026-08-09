@@ -1175,10 +1175,18 @@
       r.setProperty("--hover", css(darken(c, .99)));
       r.setProperty("--accent", css(darken(c, .99)));
       r.setProperty("--accent-hover", css(darken(c, 0.1)));
+      r.setProperty("--bg-editor", css(darken(c, .99)));
       r.setProperty("--titlebar-overlay", "rgba(0,0,0,0.02)");
     } else {
       r.setProperty("--bg", css(darken(c, .70)));
       r.setProperty("--bg1", css(darken(c, .80)));
+      // The editor is the one large field of flat colour behind body text, so it gets its
+      // own much darker shade rather than reusing --bg1. At --bg1 the brighter themes were
+      // washing out: white text on Rajang measured 1.72:1, well under the 4.5 needed to be
+      // readable, with Agnaktor, Bulldrome, Valstrax, Tigrex and Zinogre also short. At
+      // 0.35 the worst case is 6.88:1. Dark themes barely move — Forbidden goes 17.4 to
+      // 19.7 — so this only really touches the ones that were too bright.
+      r.setProperty("--bg-editor", css(darken(c, .35)));
       r.setProperty("--bg2", css(darken(c, 0.95)));
       r.setProperty("--hover", css(darken(c, 0.30)));
       r.setProperty("--accent", css(darken(c, 0.7)));
