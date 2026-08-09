@@ -1163,6 +1163,15 @@
   const lighten = (rgb, b) => { const [h, s, l] = rgbToHsl(rgb); return hslToRgb([h, s, clamp01(l + (1 - l) * b)]); };
   const css = (rgb) => `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
 
+  // Every shade is a fixed multiple of the chosen colour's lightness, matching the
+  // Collection Tracker and the Randomizer so a theme looks like itself in all three.
+  //
+  // Fixed factors are the point, not a shortcut. The palette is thirteen dark/light pairs
+  // of one hue — Tigrex and Rajang are the same amber, Teostra and Rathalos the same red —
+  // and a factor keeps that relationship because it scales both ends. Normalising the
+  // surfaces to equal brightness instead, however even it looks in isolation, collapses
+  // every pair onto the same colour and throws the palette away.
+
   const THEME_KEY = "mhgu-log-theme";
   function applyTheme(hex) {
     const c = hexRgb(hex), r = document.documentElement.style;
@@ -1175,22 +1184,25 @@
       r.setProperty("--hover", css(darken(c, .99)));
       r.setProperty("--accent", css(darken(c, .99)));
       r.setProperty("--accent-hover", css(darken(c, 0.1)));
-      r.setProperty("--bg-editor", css(darken(c, .99)));
+      r.setProperty("--content-bg", css(darken(c, .99)));
+      r.setProperty("--panel-bg", css(darken(c, .99)));
+      r.setProperty("--input-bg", css(darken(c, .99)));
       r.setProperty("--titlebar-overlay", "rgba(0,0,0,0.02)");
     } else {
       r.setProperty("--bg", css(darken(c, .70)));
       r.setProperty("--bg1", css(darken(c, .80)));
-      // The editor is the one large field of flat colour behind body text, so it gets its
-      // own much darker shade rather than reusing --bg1. At --bg1 the brighter themes were
-      // washing out: white text on Rajang measured 1.72:1, well under the 4.5 needed to be
-      // readable, with Agnaktor, Bulldrome, Valstrax, Tigrex and Zinogre also short. At
-      // 0.35 the worst case is 6.88:1. Dark themes barely move — Forbidden goes 17.4 to
-      // 19.7 — so this only really touches the ones that were too bright.
-      r.setProperty("--bg-editor", css(darken(c, .35)));
-      r.setProperty("--bg2", css(darken(c, 0.95)));
-      r.setProperty("--hover", css(darken(c, 0.30)));
-      r.setProperty("--accent", css(darken(c, 0.7)));
-      r.setProperty("--accent-hover", css(lighten(c, 0.4)));
+      // The two big panes, named and valued as in the Collection Tracker: its grid
+      // backdrop and its detail panel are the same job as the editor and the logbook here.
+      r.setProperty("--content-bg", css(darken(c, .55)));
+      r.setProperty("--panel-bg", css(darken(c, .40)));
+      // Form fields, at the Tracker's --grid-bg value: its grid cells do the same job,
+      // small inset controls on a tinted pane, and are likewise darker than what they sit
+      // on rather than lighter. At --bg2 they read as lit panels on the brighter themes.
+      r.setProperty("--input-bg", css(darken(c, .35)));
+      r.setProperty("--bg2", css(darken(c, .95)));
+      r.setProperty("--hover", css(darken(c, .30)));
+      r.setProperty("--accent", css(darken(c, .7)));
+      r.setProperty("--accent-hover", css(lighten(c, .4)));
       r.setProperty("--titlebar-overlay", "rgba(0,0,0,0.18)");
     }
     r.setProperty("--text", isLight ? "#000000" : "#ffffff");
