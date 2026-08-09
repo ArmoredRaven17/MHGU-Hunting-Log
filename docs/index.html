@@ -106,10 +106,10 @@
             </select>
           </label>
           <label class="field">Clear Time
-            <!-- No maxlength: the mask already caps the value at 4 digits, and the
+            <!-- No maxlength: the mask already caps the value at 6 digits, and the
                  attribute blocks keystrokes when a stripped character has transiently
                  filled the field, dropping digits the mask would have accepted. -->
-            <input type="text" id="f_time" inputmode="numeric" placeholder="00'00">
+            <input type="text" id="f_time" inputmode="numeric" placeholder="00'00&quot;00">
           </label>
           <label class="field wide">Notes
             <textarea id="f_notes" rows="3" placeholder="Anything else worth remembering…"></textarea>
@@ -265,6 +265,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=21"></script>
+<script src="app.js?v=22"></script>
 </body>
 </html>

@@ -355,7 +355,10 @@
       party: Array.isArray(e.party) ? e.party.filter(p => typeof p === "string") : [],
       carts: Math.max(0, Math.min(9, parseInt(e.carts, 10) || 0)),
       outcome: str(e.outcome),
-      clearTime: str(e.clearTime),
+      // Masked here, not just in the editor. The card and the copied text read the stored
+      // value directly, so an entry written before the mask existed — or loaded from a
+      // file — otherwise kept its old shape forever and copied out verbatim.
+      clearTime: formatClearTime(str(e.clearTime), true),
       notes: str(e.notes),
     };
   }
@@ -748,26 +751,35 @@
     list.appendChild(frag);
   }
 
-  // Clear Time is a digit mask: everything that isn't a digit is dropped, and the last two
-  // digits are always the seconds, so the apostrophe walks left as you type — 1, 18,
-  // 1'84, 18'42.
+  // Clear Time is a digit mask in the game's own shape, MM'SS"CC — minutes, seconds,
+  // hundredths. Everything that isn't a digit is dropped and the separators are placed
+  // from the right, so typing 6 3 1 8 3 walks through 6, 63, 6'31, 63'18, 6'31"83 and
+  // lands on exactly what the results screen showed you.
   //
-  // `settle` is for when editing finishes. It pads the minutes out to two digits, reads a
-  // bare "6" as six minutes flat rather than six seconds, and clamps to 49'59 — a quest
-  // runs out at 50 minutes, so that is the highest clear time anyone can post.
+  // `settle` is for when editing finishes: it pads each part out to two digits and clamps
+  // minutes to 49 and seconds to 59, a quest running out at 50 minutes. Hundredths need no
+  // clamp — two digits can't exceed 99.
   //
   // The clamp only runs on settle, never while typing: "1'84" is a legitimate waypoint on
   // the way to "18'42", and clamping it live to "1'59" would eat the next digit.
   const MAX_MIN = 49, MAX_SEC = 59;
   function formatClearTime(value, settle) {
-    const d = String(value || "").replace(/\D/g, "").slice(0, 4);
+    const d = String(value || "").replace(/\D/g, "").slice(0, 6);
     if (!d) return "";
     const clamp = (n, max) => String(Math.min(max, n)).padStart(2, "0");
-    if (d.length <= 2) return settle ? clamp(parseInt(d, 10), MAX_MIN) + "'00" : d;
-    const mm = d.slice(0, -2), ss = d.slice(-2);
+    if (d.length <= 2) {
+      return settle ? clamp(parseInt(d, 10), MAX_MIN) + "'00\"00" : d;
+    }
+    if (d.length <= 4) {
+      const mm = d.slice(0, -2), ss = d.slice(-2);
+      return settle
+        ? clamp(parseInt(mm, 10), MAX_MIN) + "'" + clamp(parseInt(ss, 10), MAX_SEC) + "\"00"
+        : mm + "'" + ss;
+    }
+    const cc = d.slice(-2), ss = d.slice(-4, -2), mm = d.slice(0, -4);
     return settle
-      ? clamp(parseInt(mm, 10), MAX_MIN) + "'" + clamp(parseInt(ss, 10), MAX_SEC)
-      : mm + "'" + ss;
+      ? clamp(parseInt(mm, 10), MAX_MIN) + "'" + clamp(parseInt(ss, 10), MAX_SEC) + "\"" + cc
+      : mm + "'" + ss + "\"" + cc;
   }
 
   function refreshPartyNames() {
