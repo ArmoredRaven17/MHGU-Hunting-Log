@@ -120,6 +120,8 @@
           <span style="flex:1"></span>
           <button id="newBtn" class="btn tiny outlined" title="Start a new entry">New Entry</button>
           <button id="cancelEntryBtn" class="btn tiny outlined" disabled>Cancel</button>
+          <button id="saveAsNewBtn" class="btn tiny outlined hidden"
+                  title="Add this as another entry, leaving the original as it was">Save as New</button>
           <button id="saveEntryBtn" class="btn accent tiny" disabled>Save Entry</button>
         </div>
       </div>
@@ -172,6 +174,8 @@
       <li>Pick a quest on the left — search by quest name or monster, or browse by rank.</li>
       <li>The quest fills in its own locale and objective; everything else is yours to write.</li>
       <li><strong>Save Entry</strong> adds it to the logbook on the right. Click any entry to edit it again.</li>
+      <li>Farming the same quest? Open the last run, change what differed, and press
+          <strong>Save as New</strong> to file it as another hunt instead of overwriting the first.</li>
       <li>Tick entries and press <strong>Copy Selected</strong> to put them on the clipboard — handy for
           pasting a session into Discord. <strong>Shift-click</strong> a second tick box to take
           everything in between; <strong>All</strong> ticks the whole log.</li>
@@ -269,6 +273,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=29"></script>
+<script src="app.js?v=30"></script>
 </body>
 </html>

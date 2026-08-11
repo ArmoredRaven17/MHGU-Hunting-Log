@@ -299,6 +299,7 @@
     // replaced by a different file since.
     editingId = (d.editingId && entries.some(e => e.id === d.editingId)) ? d.editingId : null;
     $("deleteEntryBtn").classList.toggle("hidden", !editingId);
+    $("saveAsNewBtn").classList.toggle("hidden", !editingId);
     $("saveEntryBtn").textContent = editingId ? "Update Entry" : "Save Entry";
     // No markEditorClean here: a draft exists precisely because there was unsaved work, so
     // it stays measured against the blank baseline the preceding reset took, and both
@@ -649,6 +650,7 @@
     // Saving additionally needs a quest — an entry without one has nothing to name it.
     $("saveEntryBtn").disabled = !changed || !selectedQuest;
     $("cancelEntryBtn").disabled = !changed;
+    $("saveAsNewBtn").disabled = !selectedQuest;
   }
   function markEditorClean() {
     editorBaseline = editorSnapshot();
@@ -662,6 +664,7 @@
     editingId = null;
     document.querySelectorAll(".log-entry.sel").forEach(n => n.classList.remove("sel"));
     $("deleteEntryBtn").classList.add("hidden");
+    $("saveAsNewBtn").classList.add("hidden");
     $("saveEntryBtn").textContent = "Save Entry";
     $("f_date").value = toDateInput(new Date());
     ["f_locale", "f_objective", "f_armor", "f_weapon", "f_time", "f_notes",
@@ -696,6 +699,7 @@
     }
     writeForm(entry);
     $("deleteEntryBtn").classList.remove("hidden");
+    $("saveAsNewBtn").classList.remove("hidden");
     $("saveEntryBtn").textContent = "Update Entry";
     // The entry as loaded is the baseline, so Update stays disabled until it's edited.
     markEditorClean();
@@ -720,15 +724,31 @@
       writeDraft();
       toast("Entry updated.");
     } else {
-      entries.push(Object.assign({ id: newId(), seq: ++seqCounter }, data));
-      markDirty();
-      renderLog();
-      refreshPartyNames();
-      // Full clear, quest included: once a hunt is in the logbook the form starts over.
-      // New Entry is the button that keeps the loadout loaded for a repeat hunt.
-      resetEditor();
+      addEntry(data);
       toast("Entry added.");
     }
+  }
+
+  // Appends a hunt and clears the form — shared by Save Entry and Save as New so a hunt
+  // recorded either way is identical, and gets its own entry number rather than a copy.
+  function addEntry(data) {
+    entries.push(Object.assign({ id: newId(), seq: ++seqCounter }, data));
+    markDirty();
+    renderLog();
+    refreshPartyNames();
+    resetEditor();
+  }
+
+  // Farming the same quest: open the last run, adjust what differed, and file it as
+  // another hunt rather than overwriting the one you opened.
+  //
+  // Unlike Update, this doesn't require a change. Two runs of the same quest with the same
+  // loadout and the same result are a perfectly ordinary pair of entries, and refusing to
+  // record the second because it matches the first would be the wrong call.
+  function saveAsNewEntry() {
+    if (!selectedQuest) return;
+    addEntry(readForm());
+    toast("Saved as a new entry.");
   }
 
   function deleteEntry(id) {
@@ -1298,6 +1318,7 @@
   $("saveBtn").addEventListener("click", saveToFile);
   $("openBtn").addEventListener("click", openFile);
   $("saveEntryBtn").addEventListener("click", saveEntry);
+  $("saveAsNewBtn").addEventListener("click", saveAsNewEntry);
   $("cancelEntryBtn").addEventListener("click", () => resetEditor());
   $("deleteEntryBtn").addEventListener("click", () => {
     if (!editingId) return;
