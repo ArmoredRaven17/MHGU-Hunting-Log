@@ -663,6 +663,13 @@
     $("cancelEntryBtn").disabled = !changed;
     $("saveAsNewBtn").disabled = !selectedQuest;
   }
+  // Keeps the checkbox and the switch's appearance in step. Both are set here rather than
+  // letting CSS read :checked off the input, so a state restored at boot renders correctly.
+  function syncFarmingSwitch() {
+    $("farmingToggle").checked = farming;
+    $("farmingToggle").closest(".farm-toggle").classList.toggle("on", farming);
+  }
+
   function markEditorClean() {
     editorBaseline = editorSnapshot();
     refreshEditorButtons();
@@ -1347,6 +1354,7 @@
   $("farmingToggle").addEventListener("change", function () {
     farming = this.checked;
     try { localStorage.setItem(FARMING_KEY, farming ? "1" : "0"); } catch (e) {}
+    syncFarmingSwitch();
     refreshEditorButtons();
     toast(farming ? "Farming on — the form stays filled after saving."
                   : "Farming off — the form clears after saving.");
@@ -1431,7 +1439,7 @@
 
   $("sortBy").value = sortBy;
   $("groupBy").value = groupBy;
-  $("farmingToggle").checked = farming;
+  syncFarmingSwitch();
   buildTree();
   filterTree();
   loadAutosave();

@@ -9,7 +9,7 @@
      editor's asset set, so it's stored here with the extension that matches its bytes. -->
 <link rel="icon" type="image/webp" href="assets/ItemIcons/MH4G-Ticket_Icon_White.webp?v=1">
 <!-- Bump ?v= on any styles/app/data change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=15">
+<link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
 <div id="app">
@@ -118,7 +118,7 @@
         <div class="editor-actions">
           <button id="deleteEntryBtn" class="btn tiny hidden">Delete</button>
           <label class="farm-toggle" title="Keep the form filled in after saving, so repeat runs of the same quest can be logged back to back">
-            <input type="checkbox" id="farmingToggle">Farming
+            <input type="checkbox" id="farmingToggle"><span class="switch"></span>Farming
           </label>
           <span style="flex:1"></span>
           <button id="newBtn" class="btn tiny outlined" title="Start a new entry">New Entry</button>
@@ -278,6 +278,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=31"></script>
+<script src="app.js?v=32"></script>
 </body>
 </html>

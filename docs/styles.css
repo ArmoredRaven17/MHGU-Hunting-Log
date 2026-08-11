@@ -238,8 +238,37 @@ fieldset.party{border:none;margin:0;padding:0}
 fieldset.party legend{padding:0;margin-bottom:4px;font-size:12px;color:var(--text-dim)}
 .party-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .editor-actions{display:flex;align-items:center;gap:8px}
-.farm-toggle{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-dim);opacity:.85;cursor:pointer}
-.farm-toggle input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+/* A switch rather than a tick box — Farming is a mode you leave on for a session, and a
+   sliding track says that where a checkbox says one-off choice.
+   The real checkbox stays in the DOM and keeps its focus and keyboard behaviour; it is
+   only moved out of sight, so :checked still drives the visuals. */
+.farm-toggle{
+  display:flex;align-items:center;gap:7px;font-size:11.5px;
+  color:var(--text-dim);opacity:.85;cursor:pointer;user-select:none;
+}
+.farm-toggle input{position:absolute;opacity:0;width:0;height:0}
+.switch{
+  position:relative;flex-shrink:0;width:30px;height:16px;border-radius:999px;
+  background:var(--input-bg);border:1px solid var(--line);
+  transition:background .15s,border-color .15s;
+}
+/* Travel is inner width (30 less the 2px of border) less the 12px knob and its 1px inset
+   at each end, so the knob lands flush against the far edge. */
+.switch::after{
+  content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;
+  background:var(--text-dim);opacity:.6;
+  transition:transform .15s,opacity .15s,background .15s;
+}
+/* Two selectors for one state, deliberately. :checked is the honest one and covers a real
+   click; the .on class is set by syncFarmingSwitch and covers the state being restored at
+   boot, where .checked is assigned in script. Either alone would very likely do, and they
+   agree in every case, so the redundancy costs a selector and removes the doubt. */
+.farm-toggle.on .switch,
+.farm-toggle input:checked + .switch{background:var(--accent);border-color:var(--accent-hover)}
+.farm-toggle.on .switch::after,
+.farm-toggle input:checked + .switch::after{transform:translateX(14px);opacity:1;background:#fff}
+.farm-toggle:focus-within .switch{outline:2px solid var(--accent-hover);outline-offset:1px}
+.farm-toggle:hover{opacity:1}
 .editor-empty{opacity:.55}
 
 /* ── Logbook ───────────────────────────────────────────────────────────── */
