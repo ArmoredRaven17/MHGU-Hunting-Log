@@ -300,7 +300,10 @@
     editingId = (d.editingId && entries.some(e => e.id === d.editingId)) ? d.editingId : null;
     $("deleteEntryBtn").classList.toggle("hidden", !editingId);
     $("saveEntryBtn").textContent = editingId ? "Update Entry" : "Save Entry";
-    $("saveEntryBtn").disabled = !selectedQuest;
+    // No markEditorClean here: a draft exists precisely because there was unsaved work, so
+    // it stays measured against the blank baseline the preceding reset took, and both
+    // buttons come back enabled.
+    refreshEditorButtons();
     if (editingId) {
       document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === editingId));
     }
@@ -545,7 +548,7 @@
     document.querySelectorAll(".qitem.sel").forEach(b => b.classList.remove("sel"));
     const node = questNodes.find(n => n.q === q);
     if (node) node.btn.classList.add("sel");
-    $("saveEntryBtn").disabled = false;
+    refreshEditorButtons();
     setView("editor");
     writeDraft();
   }
@@ -632,6 +635,26 @@
     syncWeapon();
   }
 
+  // ── Editor dirty state ───────────────────────────────────────────────────
+  // Save and Cancel stay disabled until the form differs from what it was loaded with, so
+  // neither offers to act when there is nothing to act on. The baseline is re-taken
+  // whenever the editor is (re)loaded: a reset, opening an entry, or saving an edit.
+  //
+  // The date is inside the snapshot on purpose. It's stamped by the reset that also takes
+  // the baseline, so it reads as unchanged until the hunter actually edits it.
+  let editorBaseline = "";
+  const editorSnapshot = () => JSON.stringify(readForm());
+  function refreshEditorButtons() {
+    const changed = editorSnapshot() !== editorBaseline;
+    // Saving additionally needs a quest — an entry without one has nothing to name it.
+    $("saveEntryBtn").disabled = !changed || !selectedQuest;
+    $("cancelEntryBtn").disabled = !changed;
+  }
+  function markEditorClean() {
+    editorBaseline = editorSnapshot();
+    refreshEditorButtons();
+  }
+
   // Back to a blank entry: every field, the quest, and the tree selection. Every caller
   // wants the same thing — saving, New Entry, Cancel, deleting the entry being edited, and
   // opening a different logbook — so there is deliberately no partial variant.
@@ -640,7 +663,6 @@
     document.querySelectorAll(".log-entry.sel").forEach(n => n.classList.remove("sel"));
     $("deleteEntryBtn").classList.add("hidden");
     $("saveEntryBtn").textContent = "Save Entry";
-    $("saveEntryBtn").disabled = true;
     $("f_date").value = toDateInput(new Date());
     ["f_locale", "f_objective", "f_armor", "f_weapon", "f_time", "f_notes",
      "f_p1", "f_p2", "f_p3", "f_p4"].forEach(id => { $(id).value = ""; });
@@ -652,6 +674,7 @@
     document.querySelectorAll(".qitem.sel").forEach(b => b.classList.remove("sel"));
     renderQuestHead(null);
     syncWeapon();
+    markEditorClean();
     writeDraft();
   }
 
@@ -674,7 +697,8 @@
     writeForm(entry);
     $("deleteEntryBtn").classList.remove("hidden");
     $("saveEntryBtn").textContent = "Update Entry";
-    $("saveEntryBtn").disabled = !selectedQuest;
+    // The entry as loaded is the baseline, so Update stays disabled until it's edited.
+    markEditorClean();
     document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === entry.id));
     setView("editor");
     writeDraft();
@@ -690,6 +714,9 @@
       renderLog();
       refreshPartyNames();
       document.querySelectorAll(".log-entry").forEach(n => n.classList.toggle("sel", n.dataset.id === editingId));
+      // The edit is now the saved state, so Update goes back to disabled until it's
+      // edited again — pressing it twice can't do anything the first press didn't.
+      markEditorClean();
       writeDraft();
       toast("Entry updated.");
     } else {
@@ -1279,8 +1306,11 @@
   });
   // Mirror the editor to the draft on every keystroke, so an entry in progress survives
   // the tab closing. Delegated, so fields added later are covered without extra wiring.
-  $("editorPane").addEventListener("input", scheduleDraftSave);
-  $("editorPane").addEventListener("change", scheduleDraftSave);
+  // The draft write is debounced, but the buttons have to answer the keystroke that just
+  // happened, so they refresh immediately.
+  const onEditorEdit = () => { scheduleDraftSave(); refreshEditorButtons(); };
+  $("editorPane").addEventListener("input", onEditorEdit);
+  $("editorPane").addEventListener("change", onEditorEdit);
   $("f_weaponType").addEventListener("change", syncWeapon);
   // Reformat as they type, then pad the minutes once they leave the field.
   $("f_time").addEventListener("input", function () {
