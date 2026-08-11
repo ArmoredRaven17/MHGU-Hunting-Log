@@ -632,26 +632,25 @@
     syncWeapon();
   }
 
-  // Fields that carry over to the next entry — you rarely swap armour or party
-  // between back-to-back hunts, but the objective and the result are per-hunt.
-  function resetEditor(keepLoadout) {
+  // Back to a blank entry: every field, the quest, and the tree selection. Every caller
+  // wants the same thing — saving, New Entry, Cancel, deleting the entry being edited, and
+  // opening a different logbook — so there is deliberately no partial variant.
+  function resetEditor() {
     editingId = null;
     document.querySelectorAll(".log-entry.sel").forEach(n => n.classList.remove("sel"));
     $("deleteEntryBtn").classList.add("hidden");
     $("saveEntryBtn").textContent = "Save Entry";
+    $("saveEntryBtn").disabled = true;
     $("f_date").value = toDateInput(new Date());
-    ["f_objective", "f_time", "f_notes"].forEach(id => { $(id).value = ""; });
+    ["f_locale", "f_objective", "f_armor", "f_weapon", "f_time", "f_notes",
+     "f_p1", "f_p2", "f_p3", "f_p4"].forEach(id => { $(id).value = ""; });
+    $("f_weaponType").value = "";
     $("f_carts").value = 0;
     $("f_outcome").value = "";
-    if (!keepLoadout) {
-      ["f_locale", "f_armor", "f_weapon", "f_p1", "f_p2", "f_p3", "f_p4"].forEach(id => { $(id).value = ""; });
-      $("f_weaponType").value = "";
-      selectedQuest = null;
-      localeDefault = "";
-      document.querySelectorAll(".qitem.sel").forEach(b => b.classList.remove("sel"));
-      renderQuestHead(null);
-      $("saveEntryBtn").disabled = true;
-    }
+    selectedQuest = null;
+    localeDefault = "";
+    document.querySelectorAll(".qitem.sel").forEach(b => b.classList.remove("sel"));
+    renderQuestHead(null);
     syncWeapon();
     writeDraft();
   }
@@ -1268,7 +1267,7 @@
   $("treeExpand").addEventListener("click", () => document.querySelectorAll(".qgrp").forEach(g => g.classList.add("open")));
   $("treeCollapse").addEventListener("click", () => document.querySelectorAll(".qgrp").forEach(g => g.classList.remove("open")));
 
-  $("newBtn").addEventListener("click", () => { resetEditor(true); setView("editor"); });
+  $("newBtn").addEventListener("click", () => { resetEditor(); setView("editor"); });
   $("saveBtn").addEventListener("click", saveToFile);
   $("openBtn").addEventListener("click", openFile);
   $("saveEntryBtn").addEventListener("click", saveEntry);

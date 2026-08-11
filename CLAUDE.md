@@ -76,16 +76,13 @@ Flow: `buildTree()` renders all 1292 quests once at boot → `filterTree()` show
 search → `selectQuest()` loads one into the editor → `saveEntry()` pushes or replaces in
 `entries` → `renderLog()` rebuilds the list.
 
-`resetEditor(keepLoadout)` has two callers with different intent, and they are not
-interchangeable:
+`resetEditor()` always clears everything — every field, the quest, and the tree selection.
+Saving, New Entry, Cancel, deleting the entry being edited and opening a different logbook
+all want exactly that, so there is no partial variant and no argument. An earlier version
+carried the loadout over for repeat hunts; it was removed rather than left unused.
 
-- **Saving a new entry clears everything**, quest included — once a hunt is in the logbook
-  the form starts over.
-- **New Entry keeps the quest, locale, armour, weapon and party** (`resetEditor(true)`) and
-  clears only the per-hunt fields. That is the repeat-hunt path: back-to-back runs of the
-  same quest share a loadout.
-- **Updating an existing entry stays on it**, so it can be corrected again without hunting
-  it down in the list.
+**Updating an existing entry is the one path that doesn't reset** — it stays on the entry
+so it can be corrected again without finding it in the list.
 
 One behaviour that looks like a bug but isn't: **`selectQuest` only overwrites Locale when
 it still matches the previous quest's prefill**, so a hand-edited "Jurassic Frontier /
