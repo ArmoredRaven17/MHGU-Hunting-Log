@@ -193,6 +193,12 @@
   let seqCounter = 0;
   let dirty = false;
   let fileHandle = null;
+  // Farming mode: a save leaves the form standing so back-to-back runs of the same quest
+  // can be filed without retyping the loadout each time. Remembered, because it describes
+  // how the session is being played rather than anything about one entry.
+  const FARMING_KEY = "mhgu-log-farming";
+  let farming = false;
+  try { farming = localStorage.getItem(FARMING_KEY) === "1"; } catch (e) {}
   let weaponListFor = null;  // which type's names are currently in the datalist
   let localeDefault = "";    // the locale the current quest prefilled, so a user edit is never clobbered
 
@@ -647,8 +653,13 @@
   const editorSnapshot = () => JSON.stringify(readForm());
   function refreshEditorButtons() {
     const changed = editorSnapshot() !== editorBaseline;
+    // Farming leaves the form standing after a save, so it would otherwise read as
+    // unchanged and lock the button that files the next run. Filing the same form again is
+    // the whole point of the mode, so the gate lifts — but only while composing, never
+    // while editing, where Save as New already covers repeats.
+    const repeatable = farming && !editingId;
     // Saving additionally needs a quest — an entry without one has nothing to name it.
-    $("saveEntryBtn").disabled = !changed || !selectedQuest;
+    $("saveEntryBtn").disabled = (!changed && !repeatable) || !selectedQuest;
     $("cancelEntryBtn").disabled = !changed;
     $("saveAsNewBtn").disabled = !selectedQuest;
   }
@@ -657,15 +668,21 @@
     refreshEditorButtons();
   }
 
-  // Back to a blank entry: every field, the quest, and the tree selection. Every caller
-  // wants the same thing — saving, New Entry, Cancel, deleting the entry being edited, and
-  // opening a different logbook — so there is deliberately no partial variant.
-  function resetEditor() {
+  // Leaves edit mode without touching the fields. Split out for farming, which files the
+  // form as a hunt and keeps it on screen: what's showing afterwards is an unsaved entry
+  // rather than the one that was opened, so Update, Delete and Save as New have to stand
+  // down even though nothing was cleared.
+  function exitEditMode() {
     editingId = null;
     document.querySelectorAll(".log-entry.sel").forEach(n => n.classList.remove("sel"));
     $("deleteEntryBtn").classList.add("hidden");
     $("saveAsNewBtn").classList.add("hidden");
     $("saveEntryBtn").textContent = "Save Entry";
+  }
+
+  // Back to a blank entry: every field, the quest, and the tree selection.
+  function resetEditor() {
+    exitEditMode();
     $("f_date").value = toDateInput(new Date());
     ["f_locale", "f_objective", "f_armor", "f_weapon", "f_time", "f_notes",
      "f_p1", "f_p2", "f_p3", "f_p4"].forEach(id => { $(id).value = ""; });
@@ -736,7 +753,15 @@
     markDirty();
     renderLog();
     refreshPartyNames();
-    resetEditor();
+    if (farming) {
+      // Everything stays put for the next run. Only edit mode ends, because the form now
+      // represents a hunt that hasn't been filed rather than the one that was opened.
+      exitEditMode();
+      refreshEditorButtons();
+      writeDraft();
+    } else {
+      resetEditor();
+    }
   }
 
   // Farming the same quest: open the last run, adjust what differed, and file it as
@@ -1319,6 +1344,13 @@
   $("openBtn").addEventListener("click", openFile);
   $("saveEntryBtn").addEventListener("click", saveEntry);
   $("saveAsNewBtn").addEventListener("click", saveAsNewEntry);
+  $("farmingToggle").addEventListener("change", function () {
+    farming = this.checked;
+    try { localStorage.setItem(FARMING_KEY, farming ? "1" : "0"); } catch (e) {}
+    refreshEditorButtons();
+    toast(farming ? "Farming on — the form stays filled after saving."
+                  : "Farming off — the form clears after saving.");
+  });
   $("cancelEntryBtn").addEventListener("click", () => resetEditor());
   $("deleteEntryBtn").addEventListener("click", () => {
     if (!editingId) return;
@@ -1399,6 +1431,7 @@
 
   $("sortBy").value = sortBy;
   $("groupBy").value = groupBy;
+  $("farmingToggle").checked = farming;
   buildTree();
   filterTree();
   loadAutosave();

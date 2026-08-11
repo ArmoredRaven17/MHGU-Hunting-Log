@@ -76,10 +76,10 @@ Flow: `buildTree()` renders all 1292 quests once at boot → `filterTree()` show
 search → `selectQuest()` loads one into the editor → `saveEntry()` pushes or replaces in
 `entries` → `renderLog()` rebuilds the list.
 
-`resetEditor()` always clears everything — every field, the quest, and the tree selection.
-Saving, New Entry, Cancel, deleting the entry being edited and opening a different logbook
-all want exactly that, so there is no partial variant and no argument. An earlier version
-carried the loadout over for repeat hunts; it was removed rather than left unused.
+`resetEditor()` clears everything — every field, the quest, and the tree selection. Saving,
+New Entry, Cancel, deleting the entry being edited and opening a different logbook all want
+exactly that. It takes no argument: `exitEditMode()` is the only partial, and it clears
+edit state *without* touching the fields, for farming mode (see below).
 
 **Updating an existing entry is the one path that doesn't reset** — it stays on the entry
 so it can be corrected again without finding it in the list.
@@ -171,3 +171,22 @@ removed theme can't strand someone in a look with no swatch to match it.
 (`#FFFFFF`) was the only swatch bright enough and has been removed. **Leave it in place.**
 It is kept deliberately so a light theme can be added back by dropping a bright hex into
 `COLORS`, and is not dead code to clean up.
+
+## Farming mode
+
+A toggle in the editor's action row, remembered in `mhgu-log-farming`. When on, `addEntry`
+keeps the form standing after a save instead of calling `resetEditor`, so back-to-back runs
+of the same quest only need whatever actually differed.
+
+Two things it still has to do, even though nothing is cleared:
+
+- **`exitEditMode()` runs regardless.** After the save, what's on screen is a hunt that
+  hasn't been filed, not the entry that was opened — so Update, Delete and Save as New have
+  to stand down or the next press would rewrite the wrong row.
+- **The dirty gate lifts, but only while composing.** The form is unchanged after a save,
+  so `refreshEditorButtons` would otherwise lock the button that files the next run.
+  Filing the same form again is the point of the mode. While *editing* the gate stays —
+  Save as New already covers repeats there.
+
+The date is not restamped between runs. Entries filed in one farming session share a
+timestamp and order by `seq`, which is their insertion order anyway.
