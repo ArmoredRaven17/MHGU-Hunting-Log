@@ -315,7 +315,7 @@ fieldset.party legend{padding:0;margin-bottom:4px;font-size:12px;color:var(--tex
 .modal-card p{margin:0 0 10px;line-height:1.45}
 .modal-card a{color:var(--accent-hover)}
 .modal-card code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
-.modal-card .muted{color:var(--text-dim);opacity:.85;font-size:13px}
+.modal-card .muted{color:var(--text-dim);font-size:13px;opacity:.75}
 .modal-card ul{margin:0 0 10px;padding-left:18px}
 .modal-card li{margin-bottom:5px;line-height:1.4}
 .modal-divider{border:none;border-top:1px solid var(--line);margin:14px 0 10px}
