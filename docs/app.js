@@ -698,7 +698,9 @@
       markDirty();
       renderLog();
       refreshPartyNames();
-      resetEditor(true);   // keep quest/armour/weapon/party ready for the next hunt
+      // Full clear, quest included: once a hunt is in the logbook the form starts over.
+      // New Entry is the button that keeps the loadout loaded for a repeat hunt.
+      resetEditor();
       toast("Entry added.");
     }
   }
