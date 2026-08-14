@@ -165,9 +165,26 @@
     return monsterIcon(target);
   }
   // "Born of Darkness / Hyper Nargacuga"
+  // The rank a quest displays in front of its name, or "" when there isn't a sensible one.
+  //
+  // Special Permits are skipped: their rank is the deviant tier, which their name already
+  // carries — "Redhelm IV: Hunt" would otherwise read "IV / Redhelm IV: Hunt".
+  // An entry the importer couldn't link has Level 0 and no real rank, so it gets nothing
+  // rather than "Level 0".
+  function questRank(q) {
+    if (!q || !q.Type || q.Type === "Special Permits") return "";
+    const row = (RANKS[q.Type] || []).find(([lv]) => lv === q.Level);
+    return row ? row[1] : "";
+  }
+  // "G2★ / Jumping at Shadows / Nargacuga"
   function questDisplay(q) {
     const targets = questTargets(q).map(m => (q.Hyper ? "Hyper " : "") + m);
-    return questShortName(q) + (targets.length ? " / " + targets.join(" + ") : "");
+    const parts = [];
+    const rank = questRank(q);
+    if (rank) parts.push(rank);
+    parts.push(questShortName(q));
+    if (targets.length) parts.push(targets.join(" + "));
+    return parts.join(" / ");
   }
   function questPills(q) {
     const p = [];
