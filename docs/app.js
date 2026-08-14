@@ -171,10 +171,15 @@
   // carries — "Redhelm IV: Hunt" would otherwise read "IV / Redhelm IV: Hunt".
   // An entry the importer couldn't link has Level 0 and no real rank, so it gets nothing
   // rather than "Level 0".
+  // Pub reads as Hub: it's this app's split of the Gathering Hall into High and G rank,
+  // not somewhere the game sends you. The G in "G1★" already says which half it is.
+  const RANK_PREFIX = { Village: "Village", Hub: "Hub", Pub: "Hub" };
   function questRank(q) {
     if (!q || !q.Type || q.Type === "Special Permits") return "";
     const row = (RANKS[q.Type] || []).find(([lv]) => lv === q.Level);
-    return row ? row[1] : "";
+    if (!row) return "";
+    const prefix = RANK_PREFIX[q.Type];
+    return prefix ? prefix + " " + row[1] : row[1];
   }
   // "G2★ / Jumping at Shadows / Nargacuga"
   function questDisplay(q) {
