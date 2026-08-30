@@ -526,6 +526,29 @@
     clearDirty();
     toast("Downloaded save file.");
   }
+  // Clears the log and starts over. fileHandle is dropped with it, which matters more than
+  // it looks: leaving it set would point the next Save at the file that was open, and
+  // quietly overwrite a full logbook with an empty one.
+  function newLogbook() {
+    const wipe = () => {
+      entries = [];
+      selected.clear();
+      seqCounter = 0;
+      fileHandle = null;
+      renderLog();
+      refreshPartyNames();
+      resetEditor();
+      writeLocalSave();   // so a reload doesn't restore what was just cleared
+      clearDirty();
+      toast("New logbook.");
+    };
+    if (!entries.length) return wipe();   // nothing to lose, don't ask
+    const n = entries.length;
+    confirmAction("Start a new logbook?",
+      n + (n === 1 ? " entry" : " entries") + " will be cleared from this browser. " +
+      "Save to a file first if you want to keep them.", wipe);
+  }
+
   async function openFile() {
     if (supportsFsApi) {
       try {
@@ -1480,6 +1503,7 @@
   $("treeCollapse").addEventListener("click", () => document.querySelectorAll(".qgrp").forEach(g => g.classList.remove("open")));
 
   $("newBtn").addEventListener("click", () => { resetEditor(); setView("editor"); });
+  $("newLogBtn").addEventListener("click", newLogbook);
   $("saveBtn").addEventListener("click", saveToFile);
   $("openBtn").addEventListener("click", openFile);
   $("saveEntryBtn").addEventListener("click", saveEntry);

@@ -17,6 +17,7 @@
   <header class="titlebar titlebar-header">
     <img class="title-icon" src="assets/MonsterIcons/MHGU-Question_Mark_Icon.webp" alt="">
     <h1>MHGU Hunting Log <span id="dirtyDot" class="dirty-dot hidden" title="Unsaved changes">&#9679;</span></h1>
+    <button id="newLogBtn" class="btn tiny" title="Start a new, empty logbook">New</button>
     <button id="saveBtn" class="btn tiny" title="Save the logbook to a file">Save</button>
     <button id="openBtn" class="btn tiny" title="Open a logbook file">Open</button>
     <button id="helpBtn" class="icon-btn" title="Help" aria-label="Help">?</button>
@@ -195,6 +196,7 @@
     <ul>
       <li>The log saves itself in this browser as you type — including the entry you're part-way
           through writing, which is waiting for you when you come back.</li>
+      <li><strong>New</strong> starts an empty logbook — save the current one first if you want to keep it.</li>
       <li><strong>Save</strong> writes it out to a <code>.json</code> file and <strong>Open</strong> loads one back.
           Keep separate files for separate playthroughs.</li>
       <li>Clearing your browser's site data wipes the in-browser copy, so keep a file if the log matters.</li>
@@ -303,6 +305,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=45"></script>
+<script src="app.js?v=46"></script>
 </body>
 </html>
