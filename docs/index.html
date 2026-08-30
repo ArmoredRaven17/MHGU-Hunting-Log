@@ -9,7 +9,7 @@
      editor's asset set, so it's stored here with the extension that matches its bytes. -->
 <link rel="icon" type="image/webp" href="assets/ItemIcons/MH4G-Ticket_Icon_White.webp?v=1">
 <!-- Bump ?v= on any styles/app/data change so browsers fetch fresh copies (no hard-refresh needed) -->
-<link rel="stylesheet" href="styles.css?v=18">
+<link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
 <div id="app">
@@ -117,8 +117,11 @@
 
         <div class="editor-actions">
           <button id="deleteEntryBtn" class="btn tiny hidden">Delete</button>
-          <label class="farm-toggle" title="Keep the form filled in after saving, so repeat runs of the same quest can be logged back to back">
+          <label class="opt-toggle" title="Keep the form filled in after saving, so repeat runs of the same quest can be logged back to back">
             <input type="checkbox" id="farmingToggle"><span class="switch"></span>Farming
+          </label>
+          <label class="opt-toggle" title="Stamp the date and time at the moment you save, rather than filling it in by hand">
+            <input type="checkbox" id="stampToggle"><span class="switch"></span>Timestamp
           </label>
           <span style="flex:1"></span>
           <button id="newBtn" class="btn tiny outlined" title="Start a new entry">New Entry</button>
@@ -177,6 +180,8 @@
       <li>Pick a quest on the left — search by quest name or monster, or browse by rank.</li>
       <li>The quest fills in its own locale and objective; everything else is yours to write.</li>
       <li><strong>Save Entry</strong> adds it to the logbook on the right. Click any entry to edit it again.</li>
+      <li><strong>Timestamp</strong> is on by default, so the date is set the moment you save.
+          Turn it off to fill the date in yourself.</li>
       <li>Farming the same quest? Turn on <strong>Farming</strong> and the form stays filled after
           each save, so back-to-back runs only need whatever actually differed.</li>
       <li>Already saved a run and want another like it? Open it, change what differed, and press
@@ -298,6 +303,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="data.js?v=3"></script>
-<script src="app.js?v=44"></script>
+<script src="app.js?v=45"></script>
 </body>
 </html>

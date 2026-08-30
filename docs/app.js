@@ -314,6 +314,12 @@
   const FARMING_KEY = "mhgu-log-farming";
   let farming = false;
   try { farming = localStorage.getItem(FARMING_KEY) === "1"; } catch (e) {}
+  // Timestamp mode: the date is taken at the moment of saving rather than typed. On by
+  // default — you log a hunt when you finish it, so the clock already knows the answer.
+  // Read as "not explicitly off" so a fresh browser starts on.
+  const STAMP_KEY = "mhgu-log-timestamp";
+  let autoStamp = true;
+  try { autoStamp = localStorage.getItem(STAMP_KEY) !== "0"; } catch (e) {}
   let weaponListFor = null;  // which type's names are currently in the datalist
   let localeDefault = "";    // the locale the current quest prefilled, so a user edit is never clobbered
 
@@ -782,7 +788,15 @@
   // letting CSS read :checked off the input, so a state restored at boot renders correctly.
   function syncFarmingSwitch() {
     $("farmingToggle").checked = farming;
-    $("farmingToggle").closest(".farm-toggle").classList.toggle("on", farming);
+    $("farmingToggle").closest(".opt-toggle").classList.toggle("on", farming);
+  }
+  // The date field is disabled while stamping is on: whatever it held would be replaced at
+  // save, and leaving it editable would invite typing a date that never survives.
+  function syncStampSwitch() {
+    $("stampToggle").checked = autoStamp;
+    $("stampToggle").closest(".opt-toggle").classList.toggle("on", autoStamp);
+    $("f_date").disabled = autoStamp;
+    $("f_date").title = autoStamp ? "Set automatically when you save" : "";
   }
 
   function markEditorClean() {
@@ -871,6 +885,10 @@
   // Appends a hunt and clears the form — shared by Save Entry and Save as New so a hunt
   // recorded either way is identical, and gets its own entry number rather than a copy.
   function addEntry(data) {
+    // Stamped here rather than in saveEntry, so it covers Save as New too and pointedly
+    // does not cover Update: re-dating an entry you came back to correct would move a hunt
+    // to whenever you noticed the typo.
+    if (autoStamp) data.date = toDateInput(new Date());
     entries.push(Object.assign({ id: newId(), seq: ++seqCounter }, data));
     markDirty();
     renderLog();
@@ -1466,6 +1484,13 @@
   $("openBtn").addEventListener("click", openFile);
   $("saveEntryBtn").addEventListener("click", saveEntry);
   $("saveAsNewBtn").addEventListener("click", saveAsNewEntry);
+  $("stampToggle").addEventListener("change", function () {
+    autoStamp = this.checked;
+    try { localStorage.setItem(STAMP_KEY, autoStamp ? "1" : "0"); } catch (e) {}
+    syncStampSwitch();
+    toast(autoStamp ? "Timestamp on — the date is set when you save."
+                    : "Timestamp off — set the date yourself.");
+  });
   $("farmingToggle").addEventListener("change", function () {
     farming = this.checked;
     try { localStorage.setItem(FARMING_KEY, farming ? "1" : "0"); } catch (e) {}
@@ -1555,6 +1580,7 @@
   $("sortBy").value = sortBy;
   $("groupBy").value = groupBy;
   syncFarmingSwitch();
+  syncStampSwitch();
   buildTree();
   filterTree();
   loadAutosave();

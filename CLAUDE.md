@@ -190,3 +190,13 @@ Two things it still has to do, even though nothing is cleared:
 
 The date is not restamped between runs. Entries filed in one farming session share a
 timestamp and order by `seq`, which is their insertion order anyway.
+
+## Timestamp mode
+
+A second switch beside Farming, remembered in `mhgu-log-timestamp`, **on by default** —
+read as "not explicitly off" so a fresh browser starts on. While it's on the Date field is
+disabled, because anything typed there would be replaced at save.
+
+The stamp is applied in `addEntry`, not `saveEntry`. That covers Save as New as well, and
+deliberately excludes Update: re-dating an entry you came back to correct would move the
+hunt to whenever you noticed the typo.
