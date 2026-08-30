@@ -230,6 +230,12 @@ body{
   user-select:text;-webkit-user-select:text;
 }
 .field input::placeholder,.field textarea::placeholder{color:var(--text-dim);opacity:.4}
+/* Dim the whole row, label included, when its value isn't the hunter's to set: the Date
+   while Timestamp is on, and Weapon until a type is chosen. Buttons already read as
+   disabled at .5, but nothing had said so for fields — the Date sat there looking
+   editable and simply refusing to take input. */
+.field:has(input:disabled),.field:has(select:disabled),.field:has(textarea:disabled){opacity:.5}
+.field input:disabled,.field select:disabled,.field textarea:disabled{cursor:not-allowed}
 .field input:focus,.field select:focus,.field textarea:focus{outline:1px solid var(--accent-hover)}
 .field textarea{resize:vertical;line-height:1.4}
 .weapon-row{display:flex;align-items:center;gap:6px}
