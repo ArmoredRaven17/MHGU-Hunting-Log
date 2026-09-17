@@ -22,14 +22,15 @@
 
   // QuestData.json abbreviates locales to fit the randomizer's result card. A logbook
   // line reads better spelled out, and the field stays editable so a time of day can be
-  // appended ("Jurassic Frontier / Night").
+  // appended ("Jurassic Frontier / Night"). Only names the game's own text confirms are
+  // expanded; "F. Slayground" / "V. Slayground" have no confirmed full name, so they stay
+  // abbreviated as Kiranico shows them.
   const LOCALE_FULL = {
     "J. Frontier": "Jurassic Frontier", "V. Hills": "Verdant Hills",
     "A. Ridge": "Arctic Ridge", "M. Peaks": "Misty Peaks",
     "D. Island": "Deserted Island", "A. Steppe": "Ancestral Steppe",
     "F. Seaway": "Frozen Seaway", "V. Hollow": "Volcanic Hollow",
-    "S. Pinnacle": "Sacred Pinnacle", "F. Slayground": "Frozen Slayground",
-    "V. Slayground": "Verdant Slayground",
+    "S. Pinnacle": "Sacred Pinnacle",
     "Dunes": "Dunes", "Primal Forest": "Primal Forest", "Marshlands": "Marshlands",
     "Volcano": "Volcano", "Sanctuary": "Sanctuary", "Forlorn Arena": "Forlorn Arena",
     "Arena": "Arena", "Ruined Pinnacle": "Ruined Pinnacle", "Desert": "Desert",
