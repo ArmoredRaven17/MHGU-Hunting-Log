@@ -126,8 +126,10 @@ Every `<img>` built from those helpers gets an `error` handler that swaps in
 `build-data.js` emits an `icons` array listing what is actually in `assets/MonsterIcons`,
 and `monsterIcon()` checks against it. That is what lets step 3 try several spellings of a
 plural (`Melynxes` → `Melynx`, but `Rhenoplos` stays put) and keep the one that exists,
-instead of depluralising blind. Only 17 of 1292 quests fall back to the question mark, all
-of them Fatalis/Alatreon/Nakarkos quests whose icon files aren't in the asset set.
+instead of depluralising blind. Nakarkos is the one monster whose icons are named for its
+parts (`Nakarkos Body`, `Nakarkos Tentacle`), so `ICON_ALIAS` maps the bare name the quest
+data carries to the body icon. Only 11 of 1292 quests fall back to the question mark, all
+of them Fatalis/Alatreon quests whose icon files aren't in the asset set.
 
 Two traps, both of which the randomizer's equivalent code still falls into:
 
