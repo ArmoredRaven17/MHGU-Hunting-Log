@@ -179,17 +179,9 @@
   // it means a derived name that has no icon degrades to the question mark deliberately
   // rather than via a 404 and an error handler.
   const HAS_ICON = new Set(DATA.icons || []);
-  // A monster whose icon files are named for its parts, so the quest data's plain name
-  // matches neither of them. Nakarkos ships a body and a tentacle icon; the body is the
-  // one that reads as the monster.
-  const ICON_ALIAS = { "Nakarkos": "Nakarkos Body" };
-  const iconName = (name) => ICON_ALIAS[name] || name;
-  const monsterIcon = (raw) => {
-    const name = iconName(raw);
-    return (name && HAS_ICON.has(name))
-      ? "assets/MonsterIcons/MHGU-" + name.replace(/ /g, "_") + "_Icon.webp"
-      : FALLBACK_ICON;
-  };
+  const monsterIcon = (name) => (name && HAS_ICON.has(name))
+    ? "assets/MonsterIcons/MHGU-" + name.replace(/ /g, "_") + "_Icon.webp"
+    : FALLBACK_ICON;
   const weaponIcon = (w) => w === "Prowler" ? PROWLER_ICON
     : "assets/WeaponIcons/icon_" + w.toLowerCase().replace(/ & /g, "_and_").replace(/ /g, "_") + "_tinted.png";
 
@@ -203,7 +195,7 @@
   const resolveMonster = (name) => {
     if (!name) return "";
     for (const c of [name, name.replace(/xes$/, "x"), name.replace(/ies$/, "y"), name.replace(/s$/, "")]) {
-      if (HAS_ICON.has(iconName(c))) return c;
+      if (HAS_ICON.has(c)) return c;
     }
     return "";
   };
